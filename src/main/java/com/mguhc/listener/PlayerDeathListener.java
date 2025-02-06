@@ -35,7 +35,7 @@ public class PlayerDeathListener implements Listener {
     private void OnDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
-            if (player.getHealth() - event.getDamage() <= 0 &&
+            if (player.getHealth() - event.getDamage() / 2 <= 0 &&
                 player.getLocation().getY() < 10 &&
                 gameManager.getState().equals(State.PLAYING)) {
                 event.setCancelled(true);
@@ -77,9 +77,12 @@ public class PlayerDeathListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                player.getInventory().clear();
-                player.getInventory().setArmorContents(null);
-                gameManager.giveMeetupGear(player);
+                player.getInventory().remove(Material.GOLDEN_APPLE);
+                player.getInventory().remove(Material.ARROW);
+                player.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE, 5));
+                player.getInventory().addItem(new ItemStack(Material.ARROW, 16));
+                player.setHealth(player.getMaxHealth());
+                player.setSaturation(20f);
                 gameManager.teleportToRandomLocation(player, teamManager.getTeam(player));
             }
         }.runTaskLater(Blb.getInstance(), delay * 20L);
