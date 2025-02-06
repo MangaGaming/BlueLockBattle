@@ -45,6 +45,8 @@ public class ConfigListener implements Listener {
     private void OnJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (gameManager.getState().equals(State.WAITING)) {
+            player.setHealth(player.getMaxHealth());
+            player.setSaturation(20f);
             player.teleport(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
             Blb.getInstance().clearAll(player);
             playerManager.addPlayer(player);
