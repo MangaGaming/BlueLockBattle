@@ -26,6 +26,10 @@ public class TeamManager {
             player.setPlayerListName(ChatColor.RED + player.getName());
             player.setCustomName(ChatColor.RED + player.getName());// Passer la couleur rouge
         }
+        if (team.equals(Team.BLEU)) {
+            player.setPlayerListName(ChatColor.BLUE + player.getName());
+            player.setCustomName(ChatColor.BLUE + player.getName());// Passer la couleur rouge
+        }
     }
 
 
