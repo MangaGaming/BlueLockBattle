@@ -4,6 +4,7 @@ import com.mguhc.listener.ConfigListener;
 import com.mguhc.listener.PlayerDeathListener;
 import com.mguhc.listener.RoleGuiListener;
 import com.mguhc.listener.role.isagi.IsagiListener;
+import com.mguhc.listener.role.nagi.NagiListener;
 import com.mguhc.manager.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -49,6 +50,7 @@ public class Blb extends JavaPlugin implements Listener {
 
         // RoleListener
         pluginManager.registerEvents(new IsagiListener(), this);
+        pluginManager.registerEvents(new NagiListener(), this);
     }
 
     @EventHandler
