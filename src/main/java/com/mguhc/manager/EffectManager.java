@@ -3,6 +3,8 @@ package com.mguhc.manager;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,6 +13,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class EffectManager implements Listener {
@@ -31,20 +35,24 @@ public class EffectManager implements Listener {
     // Method to apply a speed effect
     public void setSpeed(Player player, int percentage) {
         speedEffects.put(player, percentage);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, true, false)); // Appliquer effet de vitesse
     }
 
     // Method to apply a strength effect
     public void setStrength(Player player, int percentage) {
         strengthEffects.put(player, percentage);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 0, true, false)); // Appliquer effet de force
     }
 
     // Method to apply a resistance effect
     public void setResistance(Player player, int percentage) {
         resistanceEffects.put(player, percentage);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 0, true, false)); // Appliquer effet de résistance
     }
 
     public void setWeakness(Player player, int percentage) {
         weaknessEffects.put(player, percentage);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, true, false)); // Appliquer effet de faiblesse
     }
 
     public void setNoFall(Player player, boolean b) {
@@ -76,17 +84,18 @@ public class EffectManager implements Listener {
         Player player = event.getPlayer();
         if (speedEffects.containsKey(player)) {
             player.setWalkSpeed((float) 0.2 * (1 + (float) speedEffects.get(player) / 100));
-        }
-        else {
+        } else {
             player.setWalkSpeed(0.2f);
         }
     }
 
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player) {
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
             Player attacker = (Player) event.getDamager();
-            double originalDamage = event.getDamage();
+            Player victim = (Player) event.getEntity();
+            double originalDamage;
+            originalDamage = getDamage(attacker.getItemInHand());
 
             // Appliquer l'effet de force
             if (strengthEffects.containsKey(attacker)) {
@@ -101,23 +110,16 @@ public class EffectManager implements Listener {
                 originalDamage *= (100 - percentage) / 100.0;
             }
 
-            event.setDamage(originalDamage);
-        }
-
-        if (event.getEntity() instanceof Player) {
-            Player victim = (Player) event.getEntity();
-            double damage = event.getDamage();
-
             // Appliquer l'effet de résistance
             if (resistanceEffects.containsKey(victim)) {
                 int percentage = resistanceEffects.get(victim);
-                double damageReduction = damage * (percentage / 100.0);
-                damage -= damageReduction;
+                double damageReduction = originalDamage * (percentage / 100.0);
+                originalDamage -= damageReduction;
+                // S'assurer que les dégâts ne tombent pas en dessous de zéro
+                originalDamage = Math.max(0, originalDamage);
             }
 
-            // S'assurer que les dégâts ne tombent pas en dessous de zéro
-            damage = Math.max(0, damage);
-            event.setDamage(damage);
+            event.setDamage(originalDamage);
         }
     }
 
@@ -126,9 +128,9 @@ public class EffectManager implements Listener {
         Entity entity = event.getEntity();
         if (entity instanceof Player) {
             Player player = (Player) entity;
-            if(noFallActive.containsKey(player) &&
-                    noFallActive.get(player) &&
-                    event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
+            if (noFallActive.containsKey(player) &&
+                noFallActive.get(player) &&
+                event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
                 event.setCancelled(true);
             }
         }
@@ -140,12 +142,10 @@ public class EffectManager implements Listener {
         String command = event.getMessage();
 
         if (command.equalsIgnoreCase("/effects")) {
-
             String message = "Vos effets :\n" + "Vitesse : " + speedEffects.getOrDefault(player, 0) + "%\n" +
                     "Force : " + strengthEffects.getOrDefault(player, 0) + "%\n" +
                     "Résistance : " + resistanceEffects.getOrDefault(player, 0) + "%\n" +
                     "Faiblesse : " + weaknessEffects.getOrDefault(player, 0) + "%\n";
-
 
             player.sendMessage(message);
             event.setCancelled(true); // Cancel the command to prevent default display
@@ -185,12 +185,69 @@ public class EffectManager implements Listener {
             // Appliquer l'effet en fonction de son type
             if (effectType.equals(PotionEffectType.SPEED)) {
                 setSpeed(player, percentage);
-            } if (effectType.equals(PotionEffectType.INCREASE_DAMAGE)) {
+            } else if (effectType.equals(PotionEffectType.INCREASE_DAMAGE)) {
                 setStrength(player, percentage);
-            } if (effectType.equals(PotionEffectType.DAMAGE_RESISTANCE)) {
+            } else if (effectType.equals(PotionEffectType.DAMAGE_RESISTANCE)) {
                 setResistance(player, percentage);
-            } if (effectType.equals(PotionEffectType.WEAKNESS)) {
+            } else if (effectType.equals(PotionEffectType.WEAKNESS)) {
                 setWeakness(player, percentage);
+            }
+        }
+    }
+
+    public double getDamage(ItemStack item) {
+        if (item != null &&
+                item.getType().equals(Material.DIAMOND_SWORD)) {
+            if (item.getItemMeta().hasEnchant(Enchantment.DAMAGE_ALL)) {
+                int amplifier = 0;
+                for (Map.Entry<Enchantment, Integer> entry : item.getEnchantments().entrySet()) {
+                    if (entry.getKey().equals(Enchantment.DAMAGE_ALL)) {
+                        amplifier = entry.getValue();
+                        break;
+                    }
+                }
+                switch (amplifier) {
+                    case 1:
+                        return 8.25;
+                    case 2:
+                        return 9.5;
+                    case 3:
+                        return 10.75;
+                    default:
+                        return 7;
+                }
+            }
+            else {
+                return 7;
+            }
+        }
+        else {
+            if (item != null && item.getType().equals(Material.IRON_SWORD)) {
+                if (item.getItemMeta().hasEnchant(Enchantment.DAMAGE_ALL)) {
+                    int amplifier = 0;
+                    for (Map.Entry<Enchantment, Integer> entry : item.getEnchantments().entrySet()) {
+                        if (entry.getKey().equals(Enchantment.DAMAGE_ALL)) {
+                            amplifier = entry.getValue();
+                            break;
+                        }
+                    }
+                    switch (amplifier) {
+                        case 1:
+                            return 7;
+                        case 2:
+                            return 7.5;
+                        case 3:
+                            return 8;
+                        default:
+                            return 6;
+                    }
+                }
+                else {
+                    return 6;
+                }
+            }
+            else {
+                return 1;
             }
         }
     }

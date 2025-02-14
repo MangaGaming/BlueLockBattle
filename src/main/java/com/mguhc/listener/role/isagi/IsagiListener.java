@@ -53,6 +53,22 @@ public class IsagiListener implements Listener {
             effectManager.setSpeed(player, 20);
             player.setMaxHealth(20);
             player.getInventory().addItem(getRetournerItem());
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lIsagi\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §bVitesse I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous voyez la §cvie §fau dessus des joueurs.\n" +
+                    "§f §b▪ §fVous mettez §e5 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fRetourné Acrobatique §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             retourneAbility = new RetourneAbility();
             abilityManager.registerAbility(Role.Isagi, Collections.singletonList(retourneAbility));
             startArmorStandTask();
@@ -87,7 +103,7 @@ public class IsagiListener implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(Blb.getInstance(), 0, 5);
+        }.runTaskTimer(Blb.getInstance(), 0, 1);
     }
 
     private static EntityArmorStand getEntityArmorStand(Player player) {
@@ -98,8 +114,7 @@ public class IsagiListener implements Listener {
         armorStand.setLocation(player.getLocation().getX(), player.getLocation().getY() + 1, player.getLocation().getZ(), 0, 0);
         armorStand.setCustomName(String.valueOf((long) player.getHealth()) + ChatColor.RED + "❤");
         armorStand.setCustomNameVisible(true);
-        armorStand.setGravity(false); // Rendre l'ArmorStand sans graviter
-        armorStand.setSmall(true); // Optionnel : rendre l'ArmorStand plus petit
+        armorStand.setSmall(true);
         armorStand.setInvisible(true); // Rendre l'ArmorStand invisible
         return armorStand;
     }
@@ -119,7 +134,7 @@ public class IsagiListener implements Listener {
                 }
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) + "s");
+                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 + "s");
             }
         }
     }
@@ -152,6 +167,13 @@ public class IsagiListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Retourné Acrobatique");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lRetourné Acrobatique");
+            lore.add("§f");
+            lore.add("§fEn §6visant §fun joueur, permet de se §atéléporter §fdans son §7dos§f.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e10 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

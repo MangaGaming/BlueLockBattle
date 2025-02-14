@@ -1,5 +1,5 @@
 package com.mguhc.manager;
 
-public enum Team {
+public enum TeamEnum {
     ROUGE, BLEU
 }

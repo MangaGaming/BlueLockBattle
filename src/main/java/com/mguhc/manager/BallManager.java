@@ -1,5 +1,6 @@
 package com.mguhc.manager;
 
+import com.connorlinfoot.titleapi.TitleAPI;
 import com.mguhc.Blb;
 import com.mguhc.events.StartGameEvent;
 import net.minecraft.server.v1_8_R3.EntitySlime;
@@ -20,6 +21,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -29,7 +31,7 @@ import java.util.Map;
 public class BallManager implements Listener {
 
     private Slime ball; // Référence au ballon
-    private final Map<Team, Integer> goalMap = new HashMap<>();
+    private final Map<TeamEnum, Integer> goalMap = new HashMap<>();
 
     public void spawnBall(Location location) {
         // Créer le slime pour représenter le ballon
@@ -47,7 +49,7 @@ public class BallManager implements Listener {
         nmsSlime.f(tag); // Appliquer les données modifiées à l'entité
     }
 
-    public void launchBall(Player player, int power) {
+    public void launchBall(Player player, double power) {
         if (ball != null) {
             disableSlimeAI(ball, false);
             // Obtenir la direction dans laquelle le joueur regarde
@@ -82,7 +84,16 @@ public class BallManager implements Listener {
         if (item != null && item.equals(getSlimeBall())) {
             player.getInventory().remove(getSlimeBall());
             spawnBall(player.getLocation().add(0, 1, 0)); // Spawn le slime juste au-dessus du joueur
-            launchBall(player, 2);
+            if (Blb.getInstance().getRoleManager().getRole(player).equals(Role.Rin) &&
+                player.hasPotionEffect(PotionEffectType.SLOW)) {
+                launchBall(player, 2*3.5);
+            }
+            else if (Blb.getInstance().getRoleManager().getRole(player).equals(Role.Rin)) {
+                launchBall(player, 2*1.5);
+            }
+            else {
+                launchBall(player, 2);
+            }
         }
     }
 
@@ -120,10 +131,10 @@ public class BallManager implements Listener {
                     if (ball.getWorld().getBlockAt(location).getType().equals(Material.WEB)) {
                         ball.remove();
                         if (location.getZ() > 1307) {
-                            addGoal(Team.ROUGE);
+                            addGoal(TeamEnum.ROUGE);
                         }
                         else {
-                            addGoal(Team.BLEU);
+                            addGoal(TeamEnum.BLEU);
                         }
                     }
                 }
@@ -131,24 +142,25 @@ public class BallManager implements Listener {
         }.runTaskTimer(Blb.getInstance(), 0, 5);
     }
 
-    private void addGoal(Team team) {
+    private void addGoal(TeamEnum team) {
         goalMap.put(team, goalMap.getOrDefault(team, 0) + 1);
-        Bukkit.broadcastMessage(ChatColor.GREEN + "BUT !!!!!!!");
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Le score est à " + goalMap.getOrDefault(Team.BLEU, 0) + " - " + goalMap.getOrDefault(Team.ROUGE, 0));
-        if (goalMap.getOrDefault(Team.BLEU, 0) >= 5) {
-            Blb.getInstance().getGameManager().finishGame(Team.BLEU);
+        for (Player player : Blb.getInstance().getPlayerManager().getPlayers()) {
+            TitleAPI.sendTitle(player,10,3*20,10,"§6§l» §e§lBut §7: §l§9 " + getGoal(TeamEnum.BLEU) + " §7-§l§c " + getGoal(TeamEnum.ROUGE) + " §6§l«","§fPoint pour l'équipe §l " + team.name());
         }
-        else if (goalMap.getOrDefault(Team.ROUGE, 0) >= 5) {
-            Blb.getInstance().getGameManager().finishGame(Team.ROUGE);
+        if (goalMap.getOrDefault(TeamEnum.BLEU, 0) >= 5) {
+            Blb.getInstance().getGameManager().finishGame(TeamEnum.BLEU);
+        }
+        else if (goalMap.getOrDefault(TeamEnum.ROUGE, 0) >= 5) {
+            Blb.getInstance().getGameManager().finishGame(TeamEnum.ROUGE);
         }
         spawnBall(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
     }
 
-    public int getGoal(Team team) {
+    public int getGoal(TeamEnum team) {
         return goalMap.getOrDefault(team, 0);
     }
 
-    private ItemStack getSlimeBall() {
+    public ItemStack getSlimeBall() {
         // Donner un slime ball au joueur
         ItemStack slimeBall = new ItemStack(Material.SLIME_BALL);
         ItemMeta meta = slimeBall.getItemMeta();

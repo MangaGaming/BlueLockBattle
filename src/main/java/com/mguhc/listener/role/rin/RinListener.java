@@ -1,4 +1,4 @@
-package com.mguhc.listener.role.nagi;
+package com.mguhc.listener.role.rin;
 
 import com.mguhc.Blb;
 import com.mguhc.events.RoleGiveEvent;
@@ -13,11 +13,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 import java.util.Collections;
 
-public class NagiListener implements Listener {
+public class RinListener implements Listener {
 
     private final RoleManager roleManager;
     private final TeamManager teamManager;
@@ -27,9 +26,9 @@ public class NagiListener implements Listener {
     private final AbilityManager abilityManager;
     private final CooldownManager cooldownManager;
 
-    private DashAbility dashAbility;
+    private CoupFrancAbility coupFrancAbility;
 
-    public NagiListener() {
+    public RinListener() {
         Blb blb = Blb.getInstance();
         roleManager = blb.getRoleManager();
         teamManager = blb.getTeamManager();
@@ -42,16 +41,14 @@ public class NagiListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Nagi);
+        Player player = roleManager.getPlayerWithRole(Role.Rin);
         if (player != null) {
-            effectManager.setSpeed(player, 20);
             effectManager.setStrength(player, 20);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 255, false, false));
             player.setMaxHealth(20);
-            player.getInventory().addItem(getDashItem());
+            player.getInventory().addItem(getCoupFrancItem());
 
-            dashAbility = new DashAbility();
-            abilityManager.registerAbility(Role.Nagi, Collections.singletonList(dashAbility));
+            coupFrancAbility = new CoupFrancAbility();
+            abilityManager.registerAbility(Role.Rin, Collections.singletonList(coupFrancAbility));
         }
     }
 
@@ -59,31 +56,22 @@ public class NagiListener implements Listener {
     private void OnInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-        if (item != null &&
-            item.equals(getDashItem())) {
-            if (cooldownManager.getRemainingCooldown(player, dashAbility) == 0) {
-                cooldownManager.startCooldown(player, dashAbility);
-                launchPlayer(player, 1.5);
+        if (item != null && item.equals(getCoupFrancItem())) {
+            if (cooldownManager.getRemainingCooldown(player, coupFrancAbility) == 0) {
+                cooldownManager.startCooldown(player, coupFrancAbility);
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 3*20, 255));
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, dashAbility) / 1000 + "s");
+                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, coupFrancAbility) / 1000 + "s");
             }
         }
     }
 
-    private void launchPlayer(Player player, double power) {
-        // Obtenir la direction dans laquelle le joueur regarde
-        Vector direction = player.getLocation().getDirection().normalize(); // Normaliser la direction
-
-        // Appliquer la force au ballon
-        player.setVelocity(direction.multiply(power)); // Multiplier la direction par la puissance
-    }
-
-    private ItemStack getDashItem() {
+    private ItemStack getCoupFrancItem() {
         ItemStack item = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.BLUE + "Dash");
+            meta.setDisplayName(ChatColor.BLUE + "Coup Franc");
             item.setItemMeta(meta);
         }
         return item;

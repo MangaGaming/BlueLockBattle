@@ -37,7 +37,7 @@ public class GameManager {
         Bukkit.getPluginManager().callEvent(new StartGameEvent());
     }
 
-    public void teleportToRandomLocation(Player p, Team team) {
+    public void teleportToRandomLocation(Player p, TeamEnum team) {
         World world = p.getWorld();
         List<Location> bleuLocations = new ArrayList<>();
         List<Location> rougeLocations = new ArrayList<>();
@@ -58,11 +58,11 @@ public class GameManager {
 
         Random random = new Random();
 
-        if (team.equals(Team.BLEU)) {
+        if (team.equals(TeamEnum.BLEU)) {
             // Téléporter le joueur à un emplacement aléatoire de l'équipe bleue
             Location randomBleuLocation = bleuLocations.get(random.nextInt(bleuLocations.size()));
             p.teleport(randomBleuLocation);
-        } else if (team.equals(Team.ROUGE)) {
+        } else if (team.equals(TeamEnum.ROUGE)) {
             // Téléporter le joueur à un emplacement aléatoire de l'équipe rouge
             Location randomRougeLocation = rougeLocations.get(random.nextInt(rougeLocations.size()));
             p.teleport(randomRougeLocation);
@@ -152,7 +152,7 @@ public class GameManager {
         player.updateInventory();
     }
 
-    public void finishGame(Team winner) {
+    public void finishGame(TeamEnum winner) {
         Bukkit.broadcastMessage(ChatColor.GREEN + "Le vainqueur est l'équipe " + winner.name());
         Bukkit.broadcastMessage(ChatColor.RED + "Le jeu est terminé le serveur va reload il laguera pendant quelques secondes");
         for (Player player : playerManager.getPlayers()) {

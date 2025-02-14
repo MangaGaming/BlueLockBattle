@@ -3,9 +3,7 @@ package com.mguhc.listener;
 import com.mguhc.Blb;
 import com.mguhc.events.RoleGiveEvent; // Assurez-vous d'importer votre événement
 import com.mguhc.events.StartGameEvent;
-import com.mguhc.manager.PlayerManager;
-import com.mguhc.manager.Role;
-import com.mguhc.manager.RoleManager;
+import com.mguhc.manager.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -87,12 +85,24 @@ public class RoleGuiListener implements Listener {
                 Role selectedRole = Role.valueOf(roleName); // Convertir le nom en énumération Role
 
                 // Vérifier si le rôle est déjà pris
-                if (roleManager.getPlayerWithRole(selectedRole) == null) {
+                TeamManager teamManager = Blb.getInstance().getTeamManager();
+                Player playerWithRole = roleManager.getPlayerWithRole(selectedRole);
+
+                if (playerWithRole == null) {
+                    // Si aucun joueur n'a ce rôle, attribuer le rôle au joueur
                     roleManager.setRole(player, selectedRole);
                     player.sendMessage(ChatColor.GREEN + "Vous avez choisi le rôle : " + roleName + " !");
                     player.closeInventory();
                 } else {
-                    player.sendMessage(ChatColor.RED + "Ce rôle est déjà pris par un autre joueur !");
+                    // Vérifier si le joueur avec le rôle appartient à la même équipe
+                    if (teamManager.getTeam(playerWithRole).equals(teamManager.getTeam(player))) {
+                        player.sendMessage(ChatColor.RED + "Ce rôle est déjà pris par un autre joueur de ton équipe !");
+                    } else {
+                        // Si le joueur avec le rôle est dans une autre équipe, vous pouvez attribuer le rôle
+                        roleManager.setRole(player, selectedRole);
+                        player.sendMessage(ChatColor.GREEN + "Vous avez choisi le rôle : " + roleName + " !");
+                        player.closeInventory();
+                    }
                 }
             }
         }

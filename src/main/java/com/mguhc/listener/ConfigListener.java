@@ -110,8 +110,11 @@ public class ConfigListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
 
             if (clickedItem != null) {
-                if (clickedItem.getType() == Material.WOOL) {
-                    player.sendMessage(ChatColor.GREEN + "Partie lancé");
+                if (clickedItem.getType() == Material.DIAMOND_SWORD) {
+                    // Ouvrir l'inventaire des Mods
+                    openModInventory(player);
+                } else if (clickedItem.getType() == Material.WOOL) {
+                    player.sendMessage(ChatColor.GREEN + "Partie lancée");
                     player.closeInventory();
                     gameManager.startGame();
                 } else if (clickedItem.getType() == Material.ANVIL) {
@@ -119,7 +122,7 @@ public class ConfigListener implements Listener {
                     openHostInventory(player);
                 }
             }
-        } else if (event.getView().getTitle().equals(ChatColor .BLUE + "Choisir une Équipe")) {
+        } else if (event.getView().getTitle().equals(ChatColor.BLUE + "Choisir une Équipe")) {
             event.setCancelled(true); // Annuler l'événement pour éviter de déplacer les items
 
             Player player = (Player) event.getWhoClicked();
@@ -128,12 +131,12 @@ public class ConfigListener implements Listener {
             if (clickedItem != null) {
                 if (clickedItem.getType() == Material.WOOL && clickedItem.getDurability() == 14) {
                     // Ajouter le joueur à l'équipe Rouge
-                    teamManager.addPlayer(player, Team.ROUGE);
+                    teamManager.addPlayer(player, TeamEnum.ROUGE);
                     player.sendMessage(ChatColor.RED + "Vous avez rejoint l'équipe Rouge !");
                     player.closeInventory(); // Fermer l'inventaire après la sélection
                 } else if (clickedItem.getType() == Material.WOOL && clickedItem.getDurability() == 11) {
                     // Ajouter le joueur à l'équipe Bleue
-                    teamManager.addPlayer(player, Team.BLEU);
+                    teamManager.addPlayer(player, TeamEnum.BLEU);
                     player.sendMessage(ChatColor.BLUE + "Vous avez rejoint l'équipe Bleue !");
                     player.closeInventory(); // Fermer l'inventaire après la sélection
                 }
@@ -143,6 +146,15 @@ public class ConfigListener implements Listener {
 
     private void openConfigInventory(Player player) {
         Inventory configInventory = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Configuration");
+
+        // Ajouter l'épée en diamant pour le rôle de Mod
+        ItemStack modItem = new ItemStack(Material.DIAMOND_SWORD);
+        ItemMeta modMeta = modItem.getItemMeta();
+        if (modMeta != null) {
+            modMeta.setDisplayName(ChatColor.GREEN + "Mod");
+            modItem.setItemMeta(modMeta);
+        }
+        configInventory.setItem(0, modItem); // Placer l'épée en diamant en slot 0
 
         // Ajouter la laine verte pour lancer la partie
         ItemStack startGameItem = new ItemStack(Material.WOOL, 1, (short) 5); // 5 pour la couleur verte
@@ -194,6 +206,35 @@ public class ConfigListener implements Listener {
         player.openInventory(hostInventory);
     }
 
+    private void openModInventory(Player player) {
+        // Créer un inventaire de 54 slots
+        Inventory modInventory = Bukkit.createInventory(null, 54, ChatColor.GREEN + "Sélectionner un Mod");
+
+        // Récupérer tous les joueurs en ligne
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            // Créer un item pour chaque joueur
+            ItemStack playerItem = new ItemStack(Material.SKULL_ITEM, 1, (short) 3); // Utiliser une tête de joueur
+            ItemMeta meta = playerItem.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(onlinePlayer.getName()); // Nom du joueur
+                List<String> lore = new ArrayList<>();
+                // Vérifier si le joueur a déjà la permission
+                if (onlinePlayer.hasPermission("blb.host")) {
+                    lore.add(ChatColor.RED + "Déjà Mod");
+                } else {
+                    lore.add(ChatColor.GREEN + "Cliquez pour donner le statut de Mod");
+                }
+                meta.setLore(lore);
+                playerItem.setItemMeta(meta);
+            }
+            // Ajouter l'item à l'inventaire
+            modInventory.addItem(playerItem);
+        }
+
+        // Ouvrir l'inventaire pour le joueur
+        player.openInventory(modInventory);
+    }
+
     @EventHandler
     private void onHostInventoryClick(InventoryClickEvent event) {
         if (event.getView().getTitle().equals(ChatColor.GREEN + "Sélectionner un Host")) {
@@ -229,6 +270,48 @@ public class ConfigListener implements Listener {
 
                             selectedPlayer.getInventory().addItem(getConfigItem()); // Donner l'étoile du Nether au joueur
                             selectedPlayer.updateInventory();
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Erreur : Impossible de récupérer les données de permission pour " + selectedPlayer.getName());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    private void OnModInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals(ChatColor.GREEN + "Sélectionner un Mod")) {
+            event.setCancelled(true); // Annuler l'événement pour éviter de déplacer les items
+
+            Player player = (Player) event.getWhoClicked();
+            ItemStack clickedItem = event.getCurrentItem();
+
+            // Vérifier si l'item cliqué est un item de joueur
+            if (clickedItem != null && clickedItem.getType() == Material.SKULL_ITEM) {
+                String playerName = clickedItem.getItemMeta().getDisplayName();
+                Player selectedPlayer = Bukkit.getPlayer(playerName);
+
+                if (selectedPlayer != null) {
+                    User user = luckPerms.getUserManager().getUser (selectedPlayer.getUniqueId());
+                    if (selectedPlayer.hasPermission("blb.mod")) {
+                        // Retirer la permission blb.mod
+                        assert user != null;
+                        user.data().remove(Node.builder("blb.mod").build());
+                        luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
+
+                        player.sendMessage(ChatColor.RED + selectedPlayer.getName() + " n'est plus Mod.");
+                        selectedPlayer.sendMessage(ChatColor.RED + "Vous avez été retiré du statut de Mod.");
+                        playerManager.addPlayer(selectedPlayer);
+                    } else {
+                        if (user != null) {
+                            // Ajouter la permission blb.mod
+                            user.data().add(Node.builder("blb.mod").build());
+                            luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
+
+                            player.sendMessage(ChatColor.GREEN + selectedPlayer.getName() + " a maintenant le statut de Mod.");
+                            selectedPlayer.sendMessage(ChatColor.GREEN + "Vous avez été promu au statut de Mod.");
+                            playerManager.removePlayer(selectedPlayer);
                         } else {
                             player.sendMessage(ChatColor.RED + "Erreur : Impossible de récupérer les données de permission pour " + selectedPlayer.getName());
                         }
