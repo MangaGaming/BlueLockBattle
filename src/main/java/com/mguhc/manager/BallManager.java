@@ -21,7 +21,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -85,7 +84,8 @@ public class BallManager implements Listener {
             player.getInventory().remove(getSlimeBall());
             spawnBall(player.getLocation().add(0, 1, 0)); // Spawn le slime juste au-dessus du joueur
             if (Blb.getInstance().getRoleManager().getRole(player).equals(Role.Rin) &&
-                player.hasPotionEffect(PotionEffectType.SLOW)) {
+                player.getAllowFlight() &&
+                player.isFlying()) {
                 launchBall(player, 2*3.5);
             }
             else if (Blb.getInstance().getRoleManager().getRole(player).equals(Role.Rin)) {

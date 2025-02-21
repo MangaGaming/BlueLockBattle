@@ -44,7 +44,7 @@ public class ConfigListener implements Listener {
         roleManager = blb.getRoleManager();
         teamManager = blb.getTeamManager();
         gameManager = blb.getGameManager();
-        playerManager = blb.getPlayerManager(); // Initialisation de PlayerManager
+        playerManager = blb.getPlayerManager();
         luckPerms = LuckPermsProvider.get();
     }
 
@@ -53,14 +53,14 @@ public class ConfigListener implements Listener {
         Player player = event.getPlayer();
         if (gameManager.getState().equals(State.WAITING)) {
             playerManager.addPlayer(player);
-            event.setJoinMessage("§a│ §fLe joueur §a§l" + player.getName() + " §fvient de rejoindre. §3(§f" + playerManager.getPlayers().size() + "§b/§f40§3)");
+            event.setJoinMessage("§f \n§a│ §fLe joueur §a§l" + player.getName() + " §fvient de rejoindre. §3(§f" + playerManager.getPlayers().size() + "§b/§f40§3)");
             sendClickableMessage(player);
             player.setHealth(player.getMaxHealth());
             player.setSaturation(20f);
             player.teleport(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
             Blb.clearAll(player);
             if (player.hasPermission("blb.host")) {
-                player.getInventory().addItem(getConfigItem());
+                player.getInventory().setItem(4, getConfigItem());
             }
             player.getInventory().addItem(getTeamItem());
         }
@@ -104,11 +104,16 @@ public class ConfigListener implements Listener {
     private void OnInteract(PlayerInteractEvent event) throws NoSuchFieldException, IllegalAccessException {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-        if (item != null && item.equals(getConfigItem())) {
+        if (item == null) {
+            return;
+        }
+        if (item.equals(getConfigItem())) {
             openConfigInventory(player);
-        } else if (item != null && item.equals(getTeamItem())) {
+        } else if (item.equals(getTeamItem())) {
             event.setCancelled(true);
             openTeamSelectionInventory(player);
+        } else if (item.equals(getStopItem())) {
+            gameManager.cancelStart();
         }
     }
 
@@ -174,6 +179,8 @@ public class ConfigListener implements Listener {
                 } else if (clickedItem.equals(getStartItem())) {
                     player.sendMessage(ChatColor.GREEN + "Partie lancée");
                     player.closeInventory();
+                    player.getInventory().clear();
+                    player.getInventory().setItem(4, getStopItem());
                     gameManager.startGame();
                 } else if (clickedItem.equals(getHostItem())) {
                     // Ouvrir l'inventaire des joueurs
@@ -377,6 +384,14 @@ public class ConfigListener implements Listener {
         if (item.getItemStack().equals(getConfigItem()) || item.getItemStack().equals(getTeamItem())) {
             event.setCancelled(true);
         }
+    }
+
+    private ItemStack getStopItem() {
+        ItemStack item = new ItemStack(Material.BARRIER);
+        ItemMeta itemMeta = item.getItemMeta();
+        itemMeta.setDisplayName("§cArrêter le lancement");
+        item.setItemMeta(itemMeta);
+        return item;
     }
 
     private ItemStack getConfigItem() {

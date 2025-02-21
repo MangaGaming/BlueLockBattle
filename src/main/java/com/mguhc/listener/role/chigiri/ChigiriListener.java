@@ -48,18 +48,18 @@ public class ChigiriListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lChigiri\n" +
                     "§f §b▪ §fVie §7: §c8§4❤\n" +
                     "§f §b▪ §fEffets §7: §bVitesse II §fet §7Weakness I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous mettez §e15 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fSprint §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setSpeed(player, 40);
             effectManager.setWeakness(player, 20);

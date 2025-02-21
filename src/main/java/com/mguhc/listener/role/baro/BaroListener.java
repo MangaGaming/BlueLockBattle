@@ -7,7 +7,9 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -54,19 +56,19 @@ public class BaroListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lBaro\n" +
                     "§f §b▪ §fVie §7: §c13§4❤\n" +
                     "§f §b▪ §fEffets §7: §7Résistance I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous possédez §b5% §fde chance de d'§bimmobiliser §fpendant §e1 §fseconde les joueurs que vous §cfrappez§f.\n" +
                     "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fConfrontation §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(26);
             player.setHealth(player.getMaxHealth());
@@ -96,12 +98,29 @@ public class BaroListener implements Listener {
         if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
+
             if (roleManager.getRole(damager).equals(Role.Baro) && teamManager.getTeam(damager) != teamManager.getTeam(victim)) {
                 Random random = new Random();
                 int randomNumber = random.nextInt(100);
+
                 if (randomNumber <= 5) {
-                    damager.playSound(damager.getLocation(),  Sound.LEVEL_UP, 1, 1);
-                    victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20, 255));
+                    damager.playSound(damager.getLocation(), Sound.LEVEL_UP, 1, 1);
+
+                    // Créer un ArmorStand invisible
+                    ArmorStand armorStand = (ArmorStand) damager.getWorld().spawnEntity(damager.getLocation(), EntityType.ARMOR_STAND);
+                    armorStand.setVisible(false); // Rendre l'ArmorStand invisible
+                    armorStand.setGravity(false); // Empêcher la gravité
+                    armorStand.setPassenger(damager); // Mettre le joueur sur l'ArmorStand
+
+                    // Créer un BukkitRunnable pour gérer la durée de l'immobilisation
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            damager.leaveVehicle(); // Faire descendre le joueur de l'ArmorStand
+                            armorStand.remove(); // Retirer l'ArmorStand
+                            cancel(); // Annuler le Runnable
+                        }
+                    }.runTaskLater(Blb.getInstance(), 20); // Exécuter après 20 ticks (1 seconde)
                 }
             }
         }

@@ -74,12 +74,11 @@ public class RoleGuiListener implements Listener {
                         int randomIndex = random.nextInt(roles.length);
                         Role role = roles[randomIndex];
                         roleManager.setRole(player, role);
-                        player.sendMessage("§aVous avez reçu aléatoirement le rôle : " + role.name());
                     }
                 }
                 Bukkit.getPluginManager().callEvent(new RoleGiveEvent());
             }
-        }.runTaskLater(Blb.getInstance(), 5 * 20);
+        }.runTaskLater(Blb.getInstance(), 30 * 20);
     }
 
     private void openRoleSelectionInventory(Player player) throws NoSuchFieldException, IllegalAccessException {
@@ -111,7 +110,7 @@ public class RoleGuiListener implements Listener {
 
         roleInventory.setItem(4, getSoccerBall());
 
-        roleInventory.setItem(49, getReadyItem());
+        roleInventory.setItem(49, getUnreadyItem());
 
         // Ajouter tous les rôles de l'énumération Role aux emplacements spécifiques
         int[] roleSlots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30};

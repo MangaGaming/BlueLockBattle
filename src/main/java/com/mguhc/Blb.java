@@ -125,7 +125,7 @@ public class Blb extends JavaPlugin implements Listener {
         int strength = effectManager.getEffect(player, PotionEffectType.INCREASE_DAMAGE);
         int resistance = effectManager.getEffect(player, PotionEffectType.DAMAGE_RESISTANCE);
         int speed = effectManager.getEffect(player, PotionEffectType.SPEED);
-        String footer = "\n§c⚔ " + strength + "% §8| §7❂ " + resistance + "% §8| §b✪ " + speed + "%\n§3§lDiscord §8● §fdiscord.gg/versestudio\n§3§lBoutique §8● §fversestudio.fr";
+        String footer = "\n§c⚔ " + strength + "% §8| §7❂ " + resistance + "% §8| §b✪ " + speed + "%\n §f \n §3§lDiscord §8● §fdiscord.gg/versestudio\n§3§lBoutique §8● §fversestudio.fr";
 
         PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.PLAYER_LIST_HEADER_FOOTER);
         packet.getChatComponents().write(0, WrappedChatComponent.fromText(fixColors(header)))

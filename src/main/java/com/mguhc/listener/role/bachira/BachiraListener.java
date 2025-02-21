@@ -51,19 +51,19 @@ public class BachiraListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lBachira\n" +
                     "§f §b▪ §fVie §7: §c10§4❤\n" +
                     "§f §b▪ §fEffets §7: §fAucun\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous possédez §b5% §fde chance de §7retourner §fles joueurs qui vous frappent.\n" +
                     "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fDrible §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(20);
             player.getInventory().addItem(getDribleItem());

@@ -48,6 +48,22 @@ public class ReoListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Reo);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f \n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lReo\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §bVitesse I\n" +
+                    "§f \n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous ...\n" +
+                    "§f §b▪ §fVous mettez §e8 §fsecondes à réapparaitre.\n" +
+                    "§f \n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fTéléportation §8(§b«§8)\n" +
+                    "§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(20);
             player.getInventory().addItem(getTeleportationItem());
 

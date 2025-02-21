@@ -49,19 +49,19 @@ public class NagiListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lNagi\n" +
                     "§f §b▪ §fVie §7: §c10§4❤\n" +
                     "§f §b▪ §fEffets §7: §bVitesse I §fet §cForce I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous ne perdez pas de §6nourriture§f.\n" +
                     "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fDash §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setSpeed(player, 20);
             effectManager.setStrength(player, 20);

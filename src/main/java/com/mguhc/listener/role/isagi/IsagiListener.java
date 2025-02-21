@@ -55,19 +55,19 @@ public class IsagiListener implements Listener {
             player.getInventory().addItem(getRetournerItem());
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lIsagi\n" +
                     "§f §b▪ §fVie §7: §c10§4❤\n" +
                     "§f §b▪ §fEffets §7: §bVitesse I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous voyez la §cvie §fau dessus des joueurs.\n" +
                     "§f §b▪ §fVous mettez §e5 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fRetourné Acrobatique §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             retourneAbility = new RetourneAbility();
             abilityManager.registerAbility(Role.Isagi, Collections.singletonList(retourneAbility));

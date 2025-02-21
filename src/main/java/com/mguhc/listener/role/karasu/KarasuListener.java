@@ -52,19 +52,19 @@ public class KarasuListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lKarasu\n" +
                     "§f §b▪ §fVie §7: §c12§4❤\n" +
                     "§f §b▪ §fEffets §7: §7Résistance I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §f...\n" +
                     "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fEsquive §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(24);
             player.getInventory().addItem(getEsquiveItem());

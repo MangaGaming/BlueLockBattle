@@ -1,18 +1,19 @@
 package com.mguhc.listener.role.rin;
 
+import com.connorlinfoot.titleapi.TitleAPI;
 import com.mguhc.Blb;
 import com.mguhc.events.RoleGiveEvent;
 import com.mguhc.manager.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
@@ -48,19 +49,19 @@ public class RinListener implements Listener {
         if (player != null) {
             player.sendMessage("§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lINFORMATIONS\n" +
                     "§f §b▪ §fPersonnage §7: §9§lRin\n" +
                     "§f §b▪ §fVie §7: §c10§4❤\n" +
                     "§f §b▪ §fEffets §7: §cForce I\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPARTICULARITES\n" +
                     "§f §b▪ §fVous envoyez §b1,5x §fplus loin le §9Ballon§f.\n" +
                     "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8│ §3§lPOUVOIRS\n" +
                     "§f §b▪ §fCoup Franc §8(§b«§8)\n" +
-                    "§f\n" +
+                    "§f \n" +
                     "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setStrength(player, 20);
             player.setMaxHealth(20);
@@ -85,14 +86,46 @@ public class RinListener implements Listener {
     private void OnInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
+
         if (item != null && item.equals(getCoupFrancItem())) {
             if (cooldownManager.getRemainingCooldown(player, coupFrancAbility) == 0) {
                 cooldownManager.startCooldown(player, coupFrancAbility);
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 3*20, 255));
+                TitleAPI.sendTitle(player, 5, 50, 5, "§f§lImmobilisé", "");
+
+                // Créer un ArmorStand invisible
+                ArmorStand armorStand = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
+                armorStand.setVisible(false); // Rendre l'ArmorStand invisible
+                armorStand.setMaxHealth(2000);
+                armorStand.setHealth(2000);
+                armorStand.setGravity(false); // Empêcher la gravité
+                armorStand.setPassenger(player); // Mettre le joueur sur l'ArmorStand
+
+                // Empêcher le joueur de descendre
+                player.setAllowFlight(true); // Permettre le vol pour éviter de descendre
+                player.setFlying(true); // Mettre le joueur en mode vol
+
                 player.sendMessage("§3│ §fVous venez d'utiliser §bCoup Franc§f.");
+
+                // Créer un BukkitRunnable pour gérer la durée de l'immobilisation
+                new BukkitRunnable() {
+                    int duration = 3 * 20; // Durée de l'immobilisation en ticks (3 secondes)
+
+                    @Override
+                    public void run() {
+                        if (duration <= 0) {
+                            // Fin de l'immobilisation
+                            player.leaveVehicle(); // Faire descendre le joueur de l'ArmorStand
+                            armorStand.remove(); // Retirer l'ArmorStand
+                            player.setAllowFlight(false); // Désactiver le vol
+                            player.setFlying(false); // Désactiver le mode vol
+                            cancel(); // Annuler le Runnable
+                        }
+                        duration--; // Décrémenter la durée
+                    }
+                }.runTaskTimer(Blb.getInstance(), 0, 1); // Exécuter chaque tick
+            } else {
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, coupFrancAbility) / 1000 + " §fsur cette capacité.");
             }
-            else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, coupFrancAbility) / 1000 + " §fsur cette capacité.");            }
         }
     }
 
