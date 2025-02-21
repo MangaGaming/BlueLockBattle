@@ -78,7 +78,7 @@ public class IsagiListener implements Listener {
                 public void run() {
                     ItemStack item = player.getItemInHand();
                     if (item.equals(getRetournerItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, retourneAbility) + "§b) §9«");
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 + "§b) §9«");
                     }
                 }
             }.runTaskTimer(Blb.getInstance(), 0, 5);
@@ -141,7 +141,7 @@ public class IsagiListener implements Listener {
                 }
             }
             else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 +" §fsur cette capacité.");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 +"s §fsur cette capacité.");
             }
         }
     }
