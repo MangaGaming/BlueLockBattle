@@ -70,6 +70,7 @@ public class EffectManager implements Listener {
         } else if (effectType == PotionEffectType.WEAKNESS) {
             weaknessEffects.remove(player);
         }
+        player.removePotionEffect(effectType);
     }
 
     public void removeEffects(Player player) {
@@ -129,8 +130,8 @@ public class EffectManager implements Listener {
         if (entity instanceof Player) {
             Player player = (Player) entity;
             if (noFallActive.containsKey(player) &&
-                noFallActive.get(player) &&
-                event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
+                    noFallActive.get(player) &&
+                    event.getCause().equals(EntityDamageEvent.DamageCause.FALL)) {
                 event.setCancelled(true);
             }
         }

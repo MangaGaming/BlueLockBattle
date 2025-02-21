@@ -5,6 +5,7 @@ import com.mguhc.events.RoleGiveEvent;
 import com.mguhc.manager.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,9 +16,12 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ShidouListener implements Listener {
 
@@ -47,6 +51,22 @@ public class ShidouListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Shidou);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lShidou\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §cForce I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous ...\n" +
+                    "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fDomination §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setStrength(player, 20);
             player.setMaxHealth(20);
             player.getInventory().addItem(getDominationItem());
@@ -54,6 +74,19 @@ public class ShidouListener implements Listener {
             dominationAbility = new DominationAbility();
             passTroughAbility = new PassTroughAbility();
             abilityManager.registerAbility(Role.Shidou, Arrays.asList(dominationAbility, passTroughAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getDominationItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, dominationAbility) + "§b) §9« " + "§3| " + "§9» §f§lDribble Agressif §b(§f5%§b) §9«");
+                    }
+                    else {
+                        Blb.sendActionBar(player, "§9» §f§lDribble Agressif §b(§f5%§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -66,7 +99,7 @@ public class ShidouListener implements Listener {
                 if (cooldownManager.getRemainingCooldown(victim, passTroughAbility) == 0) {
                     cooldownManager.startCooldown(victim, passTroughAbility);
                     event.setCancelled(true);
-                    victim.sendMessage("Vous êtes passé à travers les dégâts");
+                    victim.playSound(damager.getLocation(),  Sound.LEVEL_UP, 1, 1);
                 }
             }
         }
@@ -113,9 +146,10 @@ public class ShidouListener implements Listener {
                         launchPlayer(p, -1.5);
                     }
                 }
+                player.sendMessage("§3│ §fVous venez d'utiliser §bDomination§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, dominationAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, dominationAbility) / 1000 + " §fsur cette capacité.");
             }
         }
 
@@ -134,6 +168,13 @@ public class ShidouListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Domination");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lDomination");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de ...");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e15 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

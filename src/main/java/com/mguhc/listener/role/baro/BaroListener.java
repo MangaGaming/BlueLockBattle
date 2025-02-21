@@ -6,6 +6,7 @@ import com.mguhc.manager.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,8 +17,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -49,6 +52,22 @@ public class BaroListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Baro);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lBaro\n" +
+                    "§f §b▪ §fVie §7: §c13§4❤\n" +
+                    "§f §b▪ §fEffets §7: §7Résistance I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous possédez §b5% §fde chance de d'§bimmobiliser §fpendant §e1 §fseconde les joueurs que vous §cfrappez§f.\n" +
+                    "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fConfrontation §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(26);
             player.setHealth(player.getMaxHealth());
             effectManager.setResistance(player, 20);
@@ -56,6 +75,19 @@ public class BaroListener implements Listener {
 
             confrontationAbility = new ConfrontationAbility();
             abilityManager.registerAbility(Role.Baro, Collections.singletonList(confrontationAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getConfrontationItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, confrontationAbility) + "§b) §9« " + "§3| " + "§9» §f§lPhysique Supérieur §b(§f5%§b) §9«");
+                    }
+                    else {
+                        Blb.sendActionBar(player, "§9» §f§lPhysique Supérieur §b(§f5%§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -68,6 +100,7 @@ public class BaroListener implements Listener {
                 Random random = new Random();
                 int randomNumber = random.nextInt(100);
                 if (randomNumber <= 5) {
+                    damager.playSound(damager.getLocation(),  Sound.LEVEL_UP, 1, 1);
                     victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20, 255));
                 }
             }
@@ -85,13 +118,11 @@ public class BaroListener implements Listener {
                 if (target != null) {
                     cooldownManager.startCooldown(player, confrontationAbility);
                     launchPlayer(target, -1.5);
-                }
-                else {
-                    player.sendMessage(ChatColor.RED + "Vous ne visez personne");
+                    player.sendMessage("§3│ §fVous venez d'utiliser §bConfrontation§f.");
                 }
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, confrontationAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, confrontationAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -133,6 +164,13 @@ public class BaroListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.RED + "Confrontation");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lConfrontation");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet d'§aéjecter §fle joueur ciblé.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e15 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

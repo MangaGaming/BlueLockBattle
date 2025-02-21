@@ -13,9 +13,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class NagiListener implements Listener {
 
@@ -44,6 +47,22 @@ public class NagiListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Nagi);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lNagi\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §bVitesse I §fet §cForce I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous ne perdez pas de §6nourriture§f.\n" +
+                    "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fDash §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setSpeed(player, 20);
             effectManager.setStrength(player, 20);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, Integer.MAX_VALUE, 255, false, false));
@@ -52,6 +71,16 @@ public class NagiListener implements Listener {
 
             dashAbility = new DashAbility();
             abilityManager.registerAbility(Role.Nagi, Collections.singletonList(dashAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getDashItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, dashAbility) + "§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -64,9 +93,10 @@ public class NagiListener implements Listener {
             if (cooldownManager.getRemainingCooldown(player, dashAbility) == 0) {
                 cooldownManager.startCooldown(player, dashAbility);
                 launchPlayer(player, 1.5);
+                player.sendMessage("§3│ §fVous venez d'utiliser §bDash§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, dashAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, dashAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -84,6 +114,13 @@ public class NagiListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Dash");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lDash");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de se §7propulser §fd'une §bdizaine §fde blocs en avant.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e20 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

@@ -1,38 +1,40 @@
 package com.mguhc.manager;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PlayerManager {
 
-    private final List<Player> players = new ArrayList<>();
-    private final Map<Player, Integer> killMap = new HashMap<>();
+    private final List<UUID> players = new ArrayList<>();
+    private final Map<UUID, Integer> killMap = new HashMap<>();
 
     public void addPlayer(Player p) {
-        players.add(p);
+        players.add(p.getUniqueId());
     }
 
     public void removePlayer(Player p) {
-        players.remove(p);
+        players.remove(p.getUniqueId());
     }
 
     public boolean isInPlayers(Player p) {
-        return players.contains(p);
+        return players.contains(p.getUniqueId());
     }
 
     public List<Player> getPlayers() {
-        return players;
+        List<Player> ps = new ArrayList<>();
+        for (UUID uuid : players) {
+            ps.add(Bukkit.getPlayer(uuid));
+        }
+        return ps;
     }
 
     public int getKills(Player player) {
-        return killMap.getOrDefault(player, 0);
+        return killMap.getOrDefault(player.getUniqueId(), 0);
     }
 
     public void addKill(Player player) {
-        killMap.put(player, killMap.getOrDefault(player, 0) + 1);
+        killMap.put(player.getUniqueId(), killMap.getOrDefault(player.getUniqueId(), 0) + 1);
     }
 }

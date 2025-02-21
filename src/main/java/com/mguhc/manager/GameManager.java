@@ -157,7 +157,7 @@ public class GameManager {
         Bukkit.broadcastMessage(ChatColor.RED + "Le jeu est terminé le serveur va reload il laguera pendant quelques secondes");
         for (Player player : playerManager.getPlayers()) {
             player.teleport(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
-            Blb.getInstance().clearAll(player);
+            Blb.clearAll(player);
             if (player.hasPermission("blb.host")) {
                 player.getInventory().addItem(getConfigItem());
             }

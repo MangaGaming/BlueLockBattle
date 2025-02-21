@@ -1,5 +1,10 @@
 package com.mguhc;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.mguhc.events.StartGameEvent;
 import com.mguhc.listener.ConfigListener;
 import com.mguhc.listener.PlayerDeathListener;
@@ -17,7 +22,11 @@ import com.mguhc.listener.role.rin.RinListener;
 import com.mguhc.listener.role.shidou.ShidouListener;
 import com.mguhc.manager.*;
 import com.mguhc.scoreboard.BlbScoreboard;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,6 +35,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
@@ -47,6 +57,7 @@ public class Blb extends JavaPlugin implements Listener {
     private Team rouge;
     private Team bleu;
     private final List<Team> teams = new ArrayList<>();
+    private ProtocolManager protocolManager;
 
     public void onEnable() {
         instance = this;
@@ -58,6 +69,7 @@ public class Blb extends JavaPlugin implements Listener {
         abilityManager = new AbilityManager();
         cooldownManager = new CooldownManager();
         gameManager = new GameManager();
+        protocolManager = ProtocolLibrary.getProtocolManager();
         registerListener();
 
         blbScoreboard = new BlbScoreboard();
@@ -100,6 +112,34 @@ public class Blb extends JavaPlugin implements Listener {
     private void OnJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         blbScoreboard.createScoreboard(player);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                setTabHeaderFooter(player);
+            }
+        }.runTaskTimer(Blb.getInstance(), 0, 20);
+    }
+
+    private void setTabHeaderFooter(Player player) {
+        String header = "§3§l» §f§lVerse Studio §3§l«\n§7BlueLock Battle §8● §fV2.0\n";
+        int strength = effectManager.getEffect(player, PotionEffectType.INCREASE_DAMAGE);
+        int resistance = effectManager.getEffect(player, PotionEffectType.DAMAGE_RESISTANCE);
+        int speed = effectManager.getEffect(player, PotionEffectType.SPEED);
+        String footer = "\n§c⚔ " + strength + "% §8| §7❂ " + resistance + "% §8| §b✪ " + speed + "%\n§3§lDiscord §8● §fdiscord.gg/versestudio\n§3§lBoutique §8● §fversestudio.fr";
+
+        PacketContainer packet = protocolManager.createPacket(PacketType.Play.Server.PLAYER_LIST_HEADER_FOOTER);
+        packet.getChatComponents().write(0, WrappedChatComponent.fromText(fixColors(header)))
+                .write(1, WrappedChatComponent.fromText(fixColors(footer)));
+
+        try {
+            protocolManager.sendServerPacket(player, packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String fixColors(String s) {
+        return ChatColor.translateAlternateColorCodes('&', s);
     }
 
     @EventHandler
@@ -112,7 +152,9 @@ public class Blb extends JavaPlugin implements Listener {
         }.runTaskTimer(Blb.getInstance(), 0, 20);
     }
 
-    public void clearAll(Player player) {
+    public static void clearAll(Player player) {
+        EffectManager effectManager = Blb.getInstance().getEffectManager();
+        RoleManager roleManager = Blb.getInstance().getRoleManager();
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
         player.setMaxHealth(20);
@@ -121,6 +163,17 @@ public class Blb extends JavaPlugin implements Listener {
             player.removePotionEffect(effect.getType());
         }
         roleManager.removeRole(player);
+    }
+
+    public static void sendActionBar(Player player, String message) {
+        if (player == null || message == null) {
+            return;
+        }
+
+        IChatBaseComponent chatBaseComponent = IChatBaseComponent.ChatSerializer.a("{\"text\": \"" + message + "\"}");
+        PacketPlayOutChat packet = new PacketPlayOutChat(chatBaseComponent, (byte) 2); // Type 2 = Action Bar
+
+        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
 
 

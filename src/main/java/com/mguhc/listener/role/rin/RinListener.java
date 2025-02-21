@@ -13,8 +13,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class RinListener implements Listener {
 
@@ -43,12 +46,38 @@ public class RinListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Rin);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lRin\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §cForce I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous envoyez §b1,5x §fplus loin le §9Ballon§f.\n" +
+                    "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fCoup Franc §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setStrength(player, 20);
             player.setMaxHealth(20);
             player.getInventory().addItem(getCoupFrancItem());
 
             coupFrancAbility = new CoupFrancAbility();
             abilityManager.registerAbility(Role.Rin, Collections.singletonList(coupFrancAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getCoupFrancItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, coupFrancAbility) + "§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -60,10 +89,10 @@ public class RinListener implements Listener {
             if (cooldownManager.getRemainingCooldown(player, coupFrancAbility) == 0) {
                 cooldownManager.startCooldown(player, coupFrancAbility);
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 3*20, 255));
+                player.sendMessage("§3│ §fVous venez d'utiliser §bCoup Franc§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, coupFrancAbility) / 1000 + "s");
-            }
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, coupFrancAbility) / 1000 + " §fsur cette capacité.");            }
         }
     }
 
@@ -72,6 +101,14 @@ public class RinListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Coup Franc");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lCoup Franc");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de s'§bimmobiliser §fet pendant cette §edurée§f, d'envoyer §b2x §fplus loin\n" +
+                    "le §9Ballon§f.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e15 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

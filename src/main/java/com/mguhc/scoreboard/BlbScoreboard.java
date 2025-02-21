@@ -36,31 +36,31 @@ public class BlbScoreboard {
         Score line1 = objective.getScore(" ");
         line1.setScore(10);
 
-        final Score[] playersScore = {objective.getScore("§8┃ §fJoueurs §7▸ §b" + getPlayerString())};
+        final Score[] playersScore = {objective.getScore(" §8┃ §fJoueurs §7▸ §b" + getPlayerString())};
         playersScore[0].setScore(9);
 
-        final Score[] eliminationsScore = {objective.getScore("§8┃ §fEliminations §7▸ §b" + getEliminationsString(player))};
+        final Score[] eliminationsScore = {objective.getScore(" §8┃ §fEliminations §7▸ §b" + getEliminationsString(player))};
         eliminationsScore[0].setScore(8);
 
         Score line2 = objective.getScore("  ");
         line2.setScore(7);
 
-        final Score[] timeScore = {objective.getScore("§8┃ §fTemps §7▸ §b" + formatTime(getTime()))};
+        final Score[] timeScore = {objective.getScore(" §8┃ §fTemps §7▸ §b" + formatTime(getTime()))};
         timeScore[0].setScore(6);
 
         Score line3 = objective.getScore("    ");
         line3.setScore(5);
 
-        final Score[] ballPlayerScore = {objective.getScore("§8┃ §fBalle §7▸ §b" + getPlayerString())};
+        final Score[] ballPlayerScore = {objective.getScore(" §8┃ §fBalle §7▸ §b" + getPlayerString())};
         ballPlayerScore[0].setScore(4);
 
-        final Score[] butsScore = {objective.getScore("§8┃ §fButs §7▸ " + getButsString(TeamEnum.ROUGE) + " / " + getButsString(TeamEnum.BLEU))};
+        final Score[] butsScore = {objective.getScore(" §8┃ §fButs §7▸ " + getButsString(TeamEnum.ROUGE) + " / " + getButsString(TeamEnum.BLEU))};
         butsScore[0].setScore(3);
 
         Score line4 = objective.getScore("     ");
         line4.setScore(2);
 
-        Score verseStudioScore = objective.getScore("§3§l@VerseStudio                    §f");
+        Score verseStudioScore = objective.getScore("§9§l@VerseStudio        §f");
         verseStudioScore.setScore(1);
 
         // Appliquer le scoreboard initial au joueur
@@ -77,27 +77,27 @@ public class BlbScoreboard {
 
                 // Mettre à jour les scores
                 scoreboard.resetScores(playersScore[0].getEntry());
-                playersScore[0] = objective.getScore("§8┃ §fJoueurs §7▸ §b" + getPlayerString());
+                playersScore[0] = objective.getScore(" §8┃ §fJoueurs §7▸ §b" + getPlayerString());
                 playersScore[0].setScore(9);
 
                 scoreboard.resetScores(eliminationsScore[0].getEntry());
-                eliminationsScore[0] = objective.getScore("§8┃ §fEliminations §7▸ §b" + getEliminationsString(player));
+                eliminationsScore[0] = objective.getScore(" §8┃ §fEliminations §7▸ §b" + getEliminationsString(player));
                 eliminationsScore[0].setScore(8);
 
                 scoreboard.resetScores(timeScore[0].getEntry());
-                timeScore[0] = objective.getScore("§8┃ §fTemps §7▸ §b" + formatTime(getTime()));
+                timeScore[0] = objective.getScore(" §8┃ §fTemps §7▸ §b" + formatTime(getTime()));
                 timeScore[0].setScore(6);
 
                 scoreboard.resetScores(ballPlayerScore[0].getEntry());
-                ballPlayerScore[0] = objective.getScore("§8┃ §fBalle §7▸ §b" + getPlayerWithBallString());
+                ballPlayerScore[0] = objective.getScore(" §8┃ §fBalle §7▸ §b" + getPlayerWithBallString());
                 ballPlayerScore[0].setScore(4);
 
                 scoreboard.resetScores(butsScore[0].getEntry());
-                butsScore[0] = objective.getScore("§8┃ §fButs §7▸ " + getButsString(TeamEnum.ROUGE) + " / " + getButsString(TeamEnum.BLEU));
+                butsScore[0] = objective.getScore(" §8┃ §fButs §7▸ " + getButsString(TeamEnum.ROUGE) + " §7/ " + getButsString(TeamEnum.BLEU));
                 butsScore[0].setScore(3);
 
                 // Mettre à jour le préfixe et suffixe des joueurs
-                updatePlayerTeams(player, scoreboard);
+                updatePlayerTeams(scoreboard);
 
 
                 // Rafraîchir le scoreboard du joueur
@@ -106,16 +106,18 @@ public class BlbScoreboard {
         }.runTaskTimer(Blb.getInstance(), 0, 20); // Mettre à jour toutes les secondes (20 ticks par seconde)
     }
 
-    private void updatePlayerTeams(Player player, Scoreboard scoreboard) {
-        TeamEnum team = teamManager.getTeam(player);
-        if (team != null) {
-            String prefix = (team == TeamEnum.BLEU) ? ChatColor.BLUE + "[Bleu] " : ChatColor.RED + "[Rouge] ";
-            org.bukkit.scoreboard.Team scoreboardTeam = scoreboard.getTeam(team.name());
-            if (scoreboardTeam == null) {
-                scoreboardTeam = scoreboard.registerNewTeam(team.name());
+    private void updatePlayerTeams(Scoreboard scoreboard) {
+        for (Player player : playerManager.getPlayers()) {
+            TeamEnum team = teamManager.getTeam(player);
+            if (team != null) {
+                String prefix = (team == TeamEnum.BLEU) ? ChatColor.BLUE + "Bleu " : ChatColor.RED + "Rouge ";
+                org.bukkit.scoreboard.Team scoreboardTeam = scoreboard.getTeam(team.name());
+                if (scoreboardTeam == null) {
+                    scoreboardTeam = scoreboard.registerNewTeam(team.name());
+                }
+                scoreboardTeam.setPrefix(prefix);
+                scoreboardTeam.addEntry(player.getName());
             }
-            scoreboardTeam.setPrefix("§cRouge ");
-            scoreboardTeam.addEntry(player.getName());
         }
     }
 
@@ -129,7 +131,12 @@ public class BlbScoreboard {
     }
 
     private String getButsString(TeamEnum team) {
-        return String.valueOf(ballManager.getGoal(team));
+        if (team.equals(TeamEnum.BLEU)) {
+            return "§9" + ballManager.getGoal(team);
+        }
+        else {
+            return "§c" + ballManager.getGoal(team);
+        }
     }
 
     private Integer getTime() {

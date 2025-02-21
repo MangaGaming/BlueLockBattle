@@ -73,6 +73,15 @@ public class IsagiListener implements Listener {
             abilityManager.registerAbility(Role.Isagi, Collections.singletonList(retourneAbility));
             startArmorStandTask();
 
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getRetournerItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, retourneAbility) + "§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -128,13 +137,11 @@ public class IsagiListener implements Listener {
                 if (getTargetPlayer(player, 5) != null) {
                     cooldownManager.startCooldown(player, retourneAbility);
                     player.teleport(getTargetPlayer(player, 5));
-                }
-                else {
-                    player.sendMessage(ChatColor.RED + "Vous ne visez personne");
+                    player.sendMessage("§3│ §fVous venez d'utiliser §bRetourné Acrobatique§f.");
                 }
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 +" §fsur cette capacité.");
             }
         }
     }

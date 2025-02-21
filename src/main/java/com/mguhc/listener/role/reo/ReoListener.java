@@ -14,8 +14,11 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class ReoListener implements Listener {
 
@@ -55,6 +58,16 @@ public class ReoListener implements Listener {
             if (p != null && teamManager.getTeam(p) == teamManager.getTeam(player)) {
                 nagi = p;
             }
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getTeleportationItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, teleportationAbility) + "§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -94,13 +107,14 @@ public class ReoListener implements Listener {
                     nagi.getLocation().getY() < 20) {
                     cooldownManager.startCooldown(player, teleportationAbility);
                     player.teleport(nagi);
+                    player.sendMessage("§3│ §fVous venez d'utiliser §bTéléportation§f.");
                 }
                 else {
                     player.sendMessage(ChatColor.RED + "Nagi non trouvé ou en cooldown de mort");
                 }
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, teleportationAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, teleportationAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -110,6 +124,13 @@ public class ReoListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Téléportation");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lFantôme");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de ...");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e15 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

@@ -86,26 +86,40 @@ public class PlayerDeathListener implements Listener {
     }
 
     private void endDeathTime(Player player, int delay) {
-        TitleAPI.sendTitle(player, 5, 30, 5, "§9§l» §fRéapparition dans " + delay  + " §fsecondes §9§l«");
+        // Créer un BukkitRunnable pour envoyer le titre chaque seconde
         new BukkitRunnable() {
+            int countdown = delay; // Initialiser le compte à rebours
+
             @Override
             public void run() {
-                player.getInventory().remove(Material.SLIME_BALL);
-                player.getInventory().remove(Material.GOLDEN_APPLE);
-                player.getInventory().remove(Material.ARROW);
-                player.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE, 5));
-                player.getInventory().addItem(new ItemStack(Material.ARROW, 16));
-                player.setHealth(player.getMaxHealth());
-                player.setSaturation(20f);
-                if (teamManager.getTeam(player).equals(TeamEnum.ROUGE)) {
-                    player.teleport(new Location(player.getWorld(), 282, 7,1190));
+                // Envoyer le titre avec le temps restant
+                TitleAPI.sendTitle(player, 5, 30, 5, "§9§l» §fRéapparition dans " + countdown + " §fsecondes §9§l«");
+
+                // Décrémenter le compte à rebours
+                countdown--;
+
+                // Si le compte à rebours atteint 0, arrêter le Runnable
+                if (countdown < 0) {
+                    // Arrêter le Runnable
+                    cancel();
+
+                    // Exécuter le code de réapparition
+                    player.getInventory().remove(Material.SLIME_BALL);
+                    player.getInventory().remove(Material.GOLDEN_APPLE);
+                    player.getInventory().remove(Material.ARROW);
+                    player.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE, 5));
+                    player.getInventory().addItem(new ItemStack(Material.ARROW, 16));
+                    player.setHealth(player.getMaxHealth());
+                    player.setSaturation(20f);
+                    if (teamManager.getTeam(player).equals(TeamEnum.ROUGE)) {
+                        player.teleport(new Location(player.getWorld(), 282, 7, 1190));
+                    } else if (teamManager.getTeam(player).equals(TeamEnum.BLEU)) {
+                        player.teleport(new Location(player.getWorld(), 282, 7, 1296));
+                    }
+                    player.setGameMode(GameMode.SURVIVAL);
                 }
-                else if (teamManager.getTeam(player).equals(TeamEnum.BLEU)) {
-                    player.teleport(new Location(player.getWorld(), 282, 7, 1296));
-                }
-                player.setGameMode(GameMode.SURVIVAL);
             }
-        }.runTaskLater(Blb.getInstance(), delay * 20L);
+        }.runTaskTimer(Blb.getInstance(), 0, 20); // Exécuter toutes les secondes (20 ticks)
     }
 
     private ItemStack getSlimeBall() {

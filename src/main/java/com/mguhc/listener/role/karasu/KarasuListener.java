@@ -6,6 +6,7 @@ import com.mguhc.manager.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,8 +15,10 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -47,12 +50,41 @@ public class KarasuListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Karasu);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lKarasu\n" +
+                    "§f §b▪ §fVie §7: §c12§4❤\n" +
+                    "§f §b▪ §fEffets §7: §7Résistance I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §f...\n" +
+                    "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fEsquive §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(24);
             player.getInventory().addItem(getEsquiveItem());
             effectManager.setResistance(player, 20);
 
             esquiveAbility = new EsquiveAbility();
             abilityManager.registerAbility(Role.Karasu, Collections.singletonList(esquiveAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getEsquiveItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, esquiveAbility) + "§b) §9« " + "§3| " + "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
+                    }
+                    else {
+                        Blb.sendActionBar(player, "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -61,11 +93,13 @@ public class KarasuListener implements Listener {
         if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
             Player damager = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-            if (roleManager.getRole(damager).equals(Role.Karasu) && teamManager.getTeam(damager) != teamManager.getTeam(victim)) {
+            Role role = roleManager.getRole(damager);
+            if (role != null && role.equals(Role.Karasu) && teamManager.getTeam(damager) != teamManager.getTeam(victim)) {
                 Random random = new Random();
                 int randomNumber = random.nextInt(100);
                 if (randomNumber <= 5) {
                     if (victim.getInventory().contains(ballManager.getSlimeBall())) {
+                        damager.playSound(damager.getLocation(),  Sound.LEVEL_UP, 1, 1);
                         victim.getInventory().remove(ballManager.getSlimeBall());
                         ballManager.spawnBall(victim.getLocation());
                     }
@@ -80,14 +114,16 @@ public class KarasuListener implements Listener {
         ItemStack item = event.getItem();
         if (item != null && item.equals(getEsquiveItem())) {
             if (cooldownManager.getRemainingCooldown(player, esquiveAbility) == 0) {
+                cooldownManager.startCooldown(player, esquiveAbility);
                 Player p = getTargetPlayer(player, 10);
                 if (p != null) {
                     Location location = p.getLocation().add(3, 0, 5);
                     player.teleport(location);
                 }
+                player.sendMessage("§3│ §fVous venez d'utiliser §bEsquive§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, esquiveAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, esquiveAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -121,6 +157,13 @@ public class KarasuListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Esquive");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lEsquive");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de ...");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e15 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

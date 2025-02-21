@@ -128,14 +128,13 @@ public class BallManager implements Listener {
                     if (location.getY() == 7) {
                         disableSlimeAI(ball, true);
                     }
-                    if (ball.getWorld().getBlockAt(location).getType().equals(Material.WEB)) {
+                    if (location.getZ() < 1178) {
                         ball.remove();
-                        if (location.getZ() > 1307) {
-                            addGoal(TeamEnum.ROUGE);
-                        }
-                        else {
-                            addGoal(TeamEnum.BLEU);
-                        }
+                        addGoal(TeamEnum.BLEU);
+                    }
+                    else if (location.getZ() > 1308) {
+                        ball.remove();
+                        addGoal(TeamEnum.ROUGE);
                     }
                 }
             }

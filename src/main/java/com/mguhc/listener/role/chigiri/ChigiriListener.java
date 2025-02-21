@@ -15,7 +15,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class ChigiriListener implements Listener {
 
@@ -44,6 +46,21 @@ public class ChigiriListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Chigiri);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lChigiri\n" +
+                    "§f §b▪ §fVie §7: §c8§4❤\n" +
+                    "§f §b▪ §fEffets §7: §bVitesse II §fet §7Weakness I\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous mettez §e15 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fSprint §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             effectManager.setSpeed(player, 40);
             effectManager.setWeakness(player, 20);
             player.setMaxHealth(16);
@@ -51,6 +68,16 @@ public class ChigiriListener implements Listener {
 
             sprintAbility = new SprintAbility();
             abilityManager.registerAbility(Role.Chigiri, Collections.singletonList(sprintAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getSprintItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, sprintAbility) + "§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -65,13 +92,14 @@ public class ChigiriListener implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        effectManager.removeEffect(player, PotionEffectType.SPEED);
+                        effectManager.setSpeed(player, 40);;
                         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 15*20, 1));
                     }
                 }.runTaskLater(Blb.getInstance(), 5*20);
+                player.sendMessage("§3│ §fVous venez d'utiliser §bSprint§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, sprintAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, sprintAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -81,6 +109,14 @@ public class ChigiriListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Sprint");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lSprint");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet d'obtenir l'effet §bVitesse II §fpendant §e5 §fsecondes. Une fois\n" +
+                    "l'effet §aterminé§f, vous écopez de l'effet §5Slowness II §fdurant §e15 §fsecondes.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e20 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

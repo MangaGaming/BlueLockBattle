@@ -2,27 +2,34 @@ package com.mguhc.listener;
 
 import com.mguhc.Blb;
 import com.mguhc.manager.*;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class ConfigListener implements Listener {
 
@@ -45,15 +52,21 @@ public class ConfigListener implements Listener {
     private void OnJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (gameManager.getState().equals(State.WAITING)) {
+            playerManager.addPlayer(player);
+            event.setJoinMessage("§a│ §fLe joueur §a§l" + player.getName() + " §fvient de rejoindre. §3(§f" + playerManager.getPlayers().size() + "§b/§f40§3)");
+            sendClickableMessage(player);
             player.setHealth(player.getMaxHealth());
             player.setSaturation(20f);
             player.teleport(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
-            Blb.getInstance().clearAll(player);
-            playerManager.addPlayer(player);
+            Blb.clearAll(player);
             if (player.hasPermission("blb.host")) {
                 player.getInventory().addItem(getConfigItem());
             }
             player.getInventory().addItem(getTeamItem());
+        }
+        else {
+            player.sendMessage("§cLa partie est déja en cours");
+            player.setGameMode(GameMode.SPECTATOR);
         }
     }
 
@@ -62,11 +75,33 @@ public class ConfigListener implements Listener {
         Player player = event.getPlayer();
         if (player != null && playerManager.getPlayers().contains(player)) {
             playerManager.removePlayer(player);
+            event.setQuitMessage("§c│ §fLe joueur §c§l" + player.getName() + " §fvient de quiter. §3(§f" + playerManager.getPlayers().size() + "§b/§f40§3)");
         }
     }
 
+    public static void sendClickableMessage(Player player) {
+        // Créer le message
+        TextComponent message = new TextComponent("§f\n§f\n§3§l» §f§lVerse Studio §3● §fBlueLock Battle\n§f\n");
+
+        // Ajouter le texte pour le serveur professionnel
+        TextComponent professional = new TextComponent("§3│ §fNotre serveur de §eprofessionnel§f. §b(§fcliquez§b)");
+        professional.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/versestudio"));
+        message.addExtra(professional);
+
+        // Ajouter un saut de ligne
+        message.addExtra("\n");
+
+        // Ajouter le texte pour le serveur communautaire
+        TextComponent community = new TextComponent("§3│ §fNotre serveur de §ccommunautaire§f. §b(§fcliquez§b)");
+        community.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/versegame"));
+        message.addExtra(community);
+
+        // Envoyer le message au joueur
+        player.spigot().sendMessage(message);
+    }
+
     @EventHandler
-    private void OnInteract(PlayerInteractEvent event) {
+    private void OnInteract(PlayerInteractEvent event) throws NoSuchFieldException, IllegalAccessException {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
         if (item != null && item.equals(getConfigItem())) {
@@ -78,31 +113,54 @@ public class ConfigListener implements Listener {
     }
 
     private void openTeamSelectionInventory(Player player) {
-        Inventory teamInventory = Bukkit.createInventory(null, 9, ChatColor.BLUE + "Choisir une Équipe");
+        Inventory teamInventory = Bukkit.createInventory(null, 27, ChatColor.BLUE + "Choisir une Équipe");
 
         // Ajouter l'équipe Rouge
-        ItemStack redTeamItem = new ItemStack(Material.WOOL, 1, (short) 14); // 14 pour la couleur rouge
+        ItemStack redTeamItem = new ItemStack(Material.BANNER, 1, (short) 1);
         ItemMeta redMeta = redTeamItem.getItemMeta();
         if (redMeta != null) {
-            redMeta.setDisplayName(ChatColor.RED + "Équipe Rouge");
+            redMeta.setDisplayName(ChatColor.RED + "§lEquipe Rouge");
+            Set<Player> playersInTeam = teamManager.getPlayersInTeam(TeamEnum.ROUGE);
+            if (playersInTeam != null) {
+                List<String> lore = new ArrayList<>();
+                for (Player p : playersInTeam) {
+                    lore.add("§8-§f" + p.getName());
+                }
+                redMeta.setLore(lore);
+            }
             redTeamItem.setItemMeta(redMeta);
         }
-        teamInventory.setItem(3, redTeamItem); // Placer à la position 3
+        teamInventory.setItem(12, redTeamItem);
 
         // Ajouter l'équipe Bleue
-        ItemStack blueTeamItem = new ItemStack(Material.WOOL, 1, (short) 11); // 11 pour la couleur bleue
+        ItemStack blueTeamItem = new ItemStack(Material.BANNER, 1, (short) 4);
         ItemMeta blueMeta = blueTeamItem.getItemMeta();
         if (blueMeta != null) {
-            blueMeta.setDisplayName(ChatColor.BLUE + "Équipe Bleue");
+            blueMeta.setDisplayName(ChatColor.BLUE + "§lEquipe Bleue");
+            Set<Player> playersInTeam = teamManager.getPlayersInTeam(TeamEnum.BLEU);
+            if (playersInTeam != null) {
+                List<String> lore = new ArrayList<>();
+                for (Player p : playersInTeam) {
+                    lore.add("§8-§f" + p.getName());
+                }
+                blueMeta.setLore(lore);
+            }
             blueTeamItem.setItemMeta(blueMeta);
         }
-        teamInventory.setItem(5, blueTeamItem); // Placer à la position 5
+        teamInventory.setItem(14, blueTeamItem);
+
+        teamInventory.setItem(0, getGlassItem());
+        teamInventory.setItem(9, getGlassItem());
+        teamInventory.setItem(18, getGlassItem());
+        teamInventory.setItem(8, getGlassItem());
+        teamInventory.setItem(17, getGlassItem());
+        teamInventory.setItem(26, getGlassItem());
 
         player.openInventory(teamInventory);
     }
 
     @EventHandler
-    private void OnInventoryClick(InventoryClickEvent event) {
+    private void OnInventoryClick(InventoryClickEvent event) throws NoSuchFieldException, IllegalAccessException {
         if (event.getView().getTitle().equals(ChatColor.GOLD + "Configuration")) {
             event.setCancelled(true); // Annuler l'événement pour éviter de déplacer les items
 
@@ -110,14 +168,14 @@ public class ConfigListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
 
             if (clickedItem != null) {
-                if (clickedItem.getType() == Material.DIAMOND_SWORD) {
+                if (clickedItem.equals(getModItem())) {
                     // Ouvrir l'inventaire des Mods
                     openModInventory(player);
-                } else if (clickedItem.getType() == Material.WOOL) {
+                } else if (clickedItem.equals(getStartItem())) {
                     player.sendMessage(ChatColor.GREEN + "Partie lancée");
                     player.closeInventory();
                     gameManager.startGame();
-                } else if (clickedItem.getType() == Material.ANVIL) {
+                } else if (clickedItem.equals(getHostItem())) {
                     // Ouvrir l'inventaire des joueurs
                     openHostInventory(player);
                 }
@@ -129,13 +187,13 @@ public class ConfigListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
 
             if (clickedItem != null) {
-                if (clickedItem.getType() == Material.WOOL && clickedItem.getDurability() == 14) {
-                    // Ajouter le joueur à l'équipe Rouge
+                if (clickedItem.getType() == Material.BANNER && clickedItem.getDurability() == 1) {
+                    teamManager.removePlayer(player);
                     teamManager.addPlayer(player, TeamEnum.ROUGE);
                     player.sendMessage(ChatColor.RED + "Vous avez rejoint l'équipe Rouge !");
                     player.closeInventory(); // Fermer l'inventaire après la sélection
-                } else if (clickedItem.getType() == Material.WOOL && clickedItem.getDurability() == 11) {
-                    // Ajouter le joueur à l'équipe Bleue
+                } else if (clickedItem.getType() == Material.BANNER && clickedItem.getDurability() == 4) {
+                    teamManager.removePlayer(player);
                     teamManager.addPlayer(player, TeamEnum.BLEU);
                     player.sendMessage(ChatColor.BLUE + "Vous avez rejoint l'équipe Bleue !");
                     player.closeInventory(); // Fermer l'inventaire après la sélection
@@ -144,35 +202,27 @@ public class ConfigListener implements Listener {
         }
     }
 
-    private void openConfigInventory(Player player) {
-        Inventory configInventory = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Configuration");
+    private void openConfigInventory(Player player) throws NoSuchFieldException, IllegalAccessException {
+        Inventory configInventory = Bukkit.createInventory(null, 54, ChatColor.GOLD + "Configuration");
 
-        // Ajouter l'épée en diamant pour le rôle de Mod
-        ItemStack modItem = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta modMeta = modItem.getItemMeta();
-        if (modMeta != null) {
-            modMeta.setDisplayName(ChatColor.GREEN + "Mod");
-            modItem.setItemMeta(modMeta);
-        }
-        configInventory.setItem(0, modItem); // Placer l'épée en diamant en slot 0
+        configInventory.setItem(0, getGlassItem());
+        configInventory.setItem(1, getGlassItem());
+        configInventory.setItem(9, getGlassItem());
+        configInventory.setItem(36, getGlassItem());
+        configInventory.setItem(45, getGlassItem());
+        configInventory.setItem(46, getGlassItem());
+        configInventory.setItem(7, getGlassItem());
+        configInventory.setItem(8, getGlassItem());
+        configInventory.setItem(17, getGlassItem());
+        configInventory.setItem(52, getGlassItem());
+        configInventory.setItem(53, getGlassItem());
+        configInventory.setItem(44, getGlassItem());
 
-        // Ajouter la laine verte pour lancer la partie
-        ItemStack startGameItem = new ItemStack(Material.WOOL, 1, (short) 5); // 5 pour la couleur verte
-        ItemMeta startGameMeta = startGameItem.getItemMeta();
-        if (startGameMeta != null) {
-            startGameMeta.setDisplayName(ChatColor.GREEN + "Lancer la partie");
-            startGameItem.setItemMeta(startGameMeta);
-        }
-        configInventory.setItem(4, startGameItem); // Placer au centre
+        configInventory.setItem(20, getModItem());
 
-        // Ajouter l'item "Host" en bas
-        ItemStack hostItem = new ItemStack(Material.ANVIL);
-        ItemMeta hostMeta = hostItem.getItemMeta();
-        if (hostMeta != null) {
-            hostMeta.setDisplayName(ChatColor.BLUE + "Host");
-            hostItem.setItemMeta(hostMeta);
-        }
-        configInventory.setItem(8, hostItem); // Placer en bas à droite
+        configInventory.setItem(24, getHostItem());
+
+        configInventory.setItem(40, getStartItem());
 
         player.openInventory(configInventory);
     }
@@ -321,6 +371,14 @@ public class ConfigListener implements Listener {
         }
     }
 
+    @EventHandler
+    private void OnDrop(PlayerDropItemEvent event) {
+        Item item = event.getItemDrop();
+        if (item.getItemStack().equals(getConfigItem()) || item.getItemStack().equals(getTeamItem())) {
+            event.setCancelled(true);
+        }
+    }
+
     private ItemStack getConfigItem() {
         ItemStack item = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = item.getItemMeta();
@@ -338,6 +396,64 @@ public class ConfigListener implements Listener {
             meta.setDisplayName(ChatColor.RED + "Choisir son équipe");
             item.setItemMeta(meta);
         }
+        return item;
+    }
+
+    private ItemStack getGlassItem() {
+        ItemStack item = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 11);
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta != null) {
+            itemMeta.setDisplayName("§f");
+            item.setItemMeta(itemMeta);
+        }
+        return item;
+    }
+
+    private ItemStack getModItem() throws NoSuchFieldException, IllegalAccessException {
+        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
+        itemMeta.setDisplayName("§l§9Modérateurs");
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmQzMGEzZGZlN2UyOWY0YmFkNzM4MTMxYWZjM2RkZmQ2OWIxNDQ5ZDVmZTU2YjI1YzY0YmI0ODkxMTNjNTQ4ZCJ9fX0="));
+        Field field;
+        field = itemMeta.getClass().getDeclaredField("profile");
+        field.setAccessible(true);
+        field.set(itemMeta, profile);
+        item.setItemMeta(itemMeta);
+
+        return item;
+    }
+
+    private ItemStack getHostItem() throws NoSuchFieldException, IllegalAccessException {
+        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
+        itemMeta.setDisplayName("§d§lHost");
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvN2UxZjVjMDM1MDEwMGQ1NWY5NWQxNzNhZTliODQ4ODJhNTAyNmMwOTVkODhjY2E1ZjliOGU4OTM1NjJhMDZjZiJ9fX0="));
+        Field field;
+        field = itemMeta.getClass().getDeclaredField("profile");
+        field.setAccessible(true);
+        field.set(itemMeta, profile);
+        item.setItemMeta(itemMeta);
+
+        return item;
+    }
+
+    private ItemStack getStartItem() throws NoSuchFieldException, IllegalAccessException {
+        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
+        itemMeta.setDisplayName("§a§lLancer");
+
+        GameProfile profile = new GameProfile(UUID.randomUUID(), null);
+        profile.getProperties().put("textures", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjFlOTc0YTI2MDhiZDZlZTU3ZjMzNDg1NjQ1ZGQ5MjJkMTZiNGEzOTc0NGViYWI0NzUzZjRkZWI0ZWY3ODIifX19"));
+        Field field;
+        field = itemMeta.getClass().getDeclaredField("profile");
+        field.setAccessible(true);
+        field.set(itemMeta, profile);
+        item.setItemMeta(itemMeta);
+
         return item;
     }
 }

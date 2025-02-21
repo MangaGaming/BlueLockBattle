@@ -6,6 +6,7 @@ import com.mguhc.manager.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,8 +15,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class BachiraListener implements Listener {
@@ -45,11 +49,40 @@ public class BachiraListener implements Listener {
     private void OnRoleGive(RoleGiveEvent event) {
         Player player = roleManager.getPlayerWithRole(Role.Bachira);
         if (player != null) {
+            player.sendMessage("§f \n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                    "§f\n" +
+                    "§8│ §3§lINFORMATIONS\n" +
+                    "§f §b▪ §fPersonnage §7: §9§lBachira\n" +
+                    "§f §b▪ §fVie §7: §c10§4❤\n" +
+                    "§f §b▪ §fEffets §7: §fAucun\n" +
+                    "§f\n" +
+                    "§8│ §3§lPARTICULARITES\n" +
+                    "§f §b▪ §fVous possédez §b5% §fde chance de §7retourner §fles joueurs qui vous frappent.\n" +
+                    "§f §b▪ §fVous mettez §e10 §fsecondes à réapparaitre.\n" +
+                    "§f\n" +
+                    "§8│ §3§lPOUVOIRS\n" +
+                    "§f §b▪ §fDrible §8(§b«§8)\n" +
+                    "§f\n" +
+                    "§8§l«§8§m---------------------------------------------------§8§l»");
             player.setMaxHealth(20);
             player.getInventory().addItem(getDribleItem());
 
             dribleAbility = new DribleAbility();
             abilityManager.registerAbility(Role.Bachira, Collections.singletonList(dribleAbility));
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack item = player.getItemInHand();
+                    if (item.equals(getDribleItem())) {
+                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, dribleAbility) + "§b) §9« " + "§3| " + "§9» §f§lDribble Élastique §b(§f5%§b) §9«");
+                    }
+                    else {
+                        Blb.sendActionBar(player, "§9» §f§lDribble Élastique §b(§f5%§b) §9«");
+                    }
+                }
+            }.runTaskTimer(Blb.getInstance(), 0, 5);
         }
     }
 
@@ -62,6 +95,7 @@ public class BachiraListener implements Listener {
                 Random random = new Random();
                 int randomNumber = random.nextInt(100);
                 if (randomNumber <= 5) {
+                    damager.playSound(damager.getLocation(),  Sound.LEVEL_UP, 1, 1);
                     returnPlayer(victim);
                 }
             }
@@ -90,7 +124,6 @@ public class BachiraListener implements Listener {
             item.equals(getDribleItem())) {
             if (cooldownManager.getRemainingCooldown(player, dribleAbility) == 0) {
                 cooldownManager.startCooldown(player, dribleAbility);
-
                 for (Entity e : player.getNearbyEntities(20, 20, 20)) {
                     if (e instanceof Player) {
                         Player p = (Player) e;
@@ -99,9 +132,10 @@ public class BachiraListener implements Listener {
                         }
                     }
                 }
+                player.sendMessage("§3│ §fVous venez d'utiliser §bDash§f.");
             }
             else {
-                player.sendMessage(ChatColor.RED + "Vous êtes en cooldown pour " + (long) cooldownManager.getRemainingCooldown(player, dribleAbility) / 1000 + "s");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, dribleAbility) / 1000 + " §fsur cette capacité.");
             }
         }
     }
@@ -111,6 +145,14 @@ public class BachiraListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.BLUE + "Drible");
+            List<String> lore = new ArrayList<>();
+            lore.add("§3≡ §b§lDrible");
+            lore.add("§f");
+            lore.add("§8┃ §fPermet de retourner de §a180° §ftous les joueurs de l'équipe §cadverse §fdans\n" +
+                    "§fun rayon de §b20 §fblocs.");
+            lore.add("§f");
+            lore.add("§6◆ §fCooldown §7: §e10 secondes");
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;
