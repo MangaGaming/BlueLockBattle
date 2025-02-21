@@ -1,6 +1,7 @@
 package com.mguhc.listener;
 
 import com.mguhc.Blb;
+import com.mguhc.events.StartGameEvent;
 import com.mguhc.manager.TeamEnum;
 import com.mguhc.manager.TeamManager;
 import org.bukkit.Bukkit;
@@ -34,7 +35,26 @@ public class ScenariosListener implements Listener {
 
     @EventHandler
     public void onBlockFromTo(BlockFromToEvent event) {
-        int id = event.getBlock().getTypeId();
+        Block block = event.getBlock();
+        Block toBlock = event.getToBlock();
+
+        // Vérifiez si l'eau se déplace vers un bloc de lave
+        if (block.getType() == Material.WATER && toBlock.getType() == Material.LAVA) {
+            event.setCancelled(true); // Annuler l'événement pour empêcher la création d'obsidienne
+        }
+
+        // Vérifiez si la lave se déplace vers un bloc d'eau
+        if (block.getType() == Material.LAVA && toBlock.getType() == Material.WATER) {
+            event.setCancelled(true); // Annuler l'événement pour empêcher la création d'obsidienne
+        }
+
+        // Vérifiez si un bloc d'obsidienne est créé
+        if (toBlock.getType() == Material.OBSIDIAN) {
+            toBlock.setType(Material.AIR); // Détruire le bloc d'obsidienne
+        }
+
+        // Vérifiez si l'eau ou la lave se déplace vers un bloc d'eau ou de lave
+        int id = block.getTypeId();
         if (id == 8 || id == 9 || id == 10 || id == 11) {
             event.setCancelled(true);
         }
@@ -80,6 +100,33 @@ public class ScenariosListener implements Listener {
                     }
                 }
                 event.setCancelled(true); // Annuler l'événement pour éviter l'envoi normal du message
+            }
+        }
+    }
+
+    @EventHandler
+    private void OnStart(StartGameEvent event) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                checkForObsidian();
+            }
+        }.runTaskTimer(Blb.getInstance(), 0, 20*5);
+    }
+
+    private void checkForObsidian() {
+        int minX = 243;
+        int maxX = 324;
+        int y = 7;
+        int minZ = 1179;
+        int maxZ = 1313;
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                Block block = Bukkit.getWorld("world").getBlockAt(x, y, z);
+                if (block.getType() == Material.OBSIDIAN) {
+                    block.setType(Material.AIR); // Détruire le bloc d'obsidienne
+                }
             }
         }
     }
