@@ -48,40 +48,44 @@ public class IsagiListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Isagi);
-        if (player != null) {
-            effectManager.setSpeed(player, 20);
-            player.setMaxHealth(20);
-            player.getInventory().addItem(getRetournerItem());
-            player.sendMessage("§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f \n" +
-                    "§8│ §3§lINFORMATIONS\n" +
-                    "§f §b▪ §fPersonnage §7: §9§lIsagi\n" +
-                    "§f §b▪ §fVie §7: §c10§4❤\n" +
-                    "§f §b▪ §fEffets §7: §bVitesse I\n" +
-                    "§f \n" +
-                    "§8│ §3§lPARTICULARITES\n" +
-                    "§f §b▪ §fVous voyez la §cvie §fau dessus des joueurs.\n" +
-                    "§f §b▪ §fVous mettez §e5 §fsecondes à réapparaitre.\n" +
-                    "§f \n" +
-                    "§8│ §3§lPOUVOIRS\n" +
-                    "§f §b▪ §fRetourné Acrobatique §8(§b«§8)\n" +
-                    "§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»");
-            retourneAbility = new RetourneAbility();
-            abilityManager.registerAbility(Role.Isagi, Collections.singletonList(retourneAbility));
-            startArmorStandTask();
+        List<Player> players = roleManager.getPlayersWithRole(Role.Isagi);
+        if (players != null) {
+            for (Player player: players) {
+                if (player != null) {
+                    effectManager.setSpeed(player, 20);
+                    player.setMaxHealth(20);
+                    player.getInventory().addItem(getRetournerItem());
+                    player.sendMessage("§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                            "§f \n" +
+                            "§8│ §3§lINFORMATIONS\n" +
+                            "§f §b▪ §fPersonnage §7: §9§lIsagi\n" +
+                            "§f §b▪ §fVie §7: §c10§4❤\n" +
+                            "§f §b▪ §fEffets §7: §bVitesse I\n" +
+                            "§f \n" +
+                            "§8│ §3§lPARTICULARITES\n" +
+                            "§f §b▪ §fVous voyez la §cvie §fau dessus des joueurs.\n" +
+                            "§f §b▪ §fVous mettez §e5 §fsecondes à réapparaitre.\n" +
+                            "§f \n" +
+                            "§8│ §3§lPOUVOIRS\n" +
+                            "§f §b▪ §fRetourné Acrobatique §8(§b«§8)\n" +
+                            "§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»");
+                    retourneAbility = new RetourneAbility();
+                    abilityManager.registerAbility(Role.Isagi, Collections.singletonList(retourneAbility));
+                    startArmorStandTask();
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ItemStack item = player.getItemInHand();
-                    if (item.equals(getRetournerItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 + "§b) §9«");
-                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            ItemStack item = player.getItemInHand();
+                            if (item.equals(getRetournerItem())) {
+                                Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, retourneAbility) / 1000 + "§b) §9«");
+                            }
+                        }
+                    }.runTaskTimer(Blb.getInstance(), 0, 5);
                 }
-            }.runTaskTimer(Blb.getInstance(), 0, 5);
+            }
         }
     }
 
@@ -90,14 +94,17 @@ public class IsagiListener implements Listener {
             @Override
             public void run() {
                 for (Player player : playerManager.getPlayers()) {
-                    if (!player.equals(roleManager.getPlayerWithRole(Role.Isagi))) {
+                    if (!roleManager.getPlayersWithRole(Role.Isagi).contains(player)) {
                         // Supprimer l'ArmorStand existant si présent
                         if (armorStands.containsKey(player)) {
                             EntityArmorStand existingStand = armorStands.get(player);
                             // Envoyer le paquet de destruction pour l'ArmorStand
                             PacketPlayOutEntityDestroy packetDestroy = new PacketPlayOutEntityDestroy(existingStand.getId());
-                            ((CraftPlayer) roleManager.getPlayerWithRole(Role.Isagi)).getHandle().playerConnection.sendPacket(packetDestroy);
-                            armorStands.remove(player); // Retirer l'ArmorStand de la map
+                            List<Player> players = roleManager.getPlayersWithRole(Role.Isagi);
+                            for (Player p : players) {
+                                ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packetDestroy);
+                                armorStands.remove(player); // Retirer l'ArmorStand de la map
+                            }
                         }
 
                         // Créer un nouvel ArmorStand NMS
@@ -105,8 +112,10 @@ public class IsagiListener implements Listener {
 
                         // Envoyer le paquet de spawn à tous les joueurs
                         PacketPlayOutSpawnEntityLiving packet = new PacketPlayOutSpawnEntityLiving(armorStand);
-                        ((CraftPlayer) roleManager.getPlayerWithRole(Role.Isagi)).getHandle().playerConnection.sendPacket(packet);
-
+                        List<Player> players = roleManager.getPlayersWithRole(Role.Isagi);
+                        for (Player p : players) {
+                            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+                        }
                         // Stocker le nouvel ArmorStand dans la map
                         armorStands.put(player, armorStand);
                     }

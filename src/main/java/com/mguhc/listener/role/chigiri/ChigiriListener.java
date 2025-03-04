@@ -44,40 +44,44 @@ public class ChigiriListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Chigiri);
-        if (player != null) {
-            player.sendMessage("§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f \n" +
-                    "§8│ §3§lINFORMATIONS\n" +
-                    "§f §b▪ §fPersonnage §7: §9§lChigiri\n" +
-                    "§f §b▪ §fVie §7: §c8§4❤\n" +
-                    "§f §b▪ §fEffets §7: §bVitesse II §fet §7Weakness I\n" +
-                    "§f \n" +
-                    "§8│ §3§lPARTICULARITES\n" +
-                    "§f §b▪ §fVous mettez §e15 §fsecondes à réapparaitre.\n" +
-                    "§f \n" +
-                    "§8│ §3§lPOUVOIRS\n" +
-                    "§f §b▪ §fSprint §8(§b«§8)\n" +
-                    "§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»");
-            effectManager.setSpeed(player, 40);
-            effectManager.setWeakness(player, 20);
-            player.setMaxHealth(16);
-            player.getInventory().addItem(getSprintItem());
+        List<Player> players = roleManager.getPlayersWithRole(Role.Chigiri);
+        if (players != null) {
+            for (Player player: players) {
+                if (player != null) {
+                    player.sendMessage("§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                            "§f \n" +
+                            "§8│ §3§lINFORMATIONS\n" +
+                            "§f §b▪ §fPersonnage §7: §9§lChigiri\n" +
+                            "§f §b▪ §fVie §7: §c8§4❤\n" +
+                            "§f §b▪ §fEffets §7: §bVitesse II §fet §7Weakness I\n" +
+                            "§f \n" +
+                            "§8│ §3§lPARTICULARITES\n" +
+                            "§f §b▪ §fVous mettez §e15 §fsecondes à réapparaitre.\n" +
+                            "§f \n" +
+                            "§8│ §3§lPOUVOIRS\n" +
+                            "§f §b▪ §fSprint §8(§b«§8)\n" +
+                            "§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»");
+                    effectManager.setSpeed(player, 40);
+                    effectManager.setWeakness(player, 20);
+                    player.setMaxHealth(16);
+                    player.getInventory().addItem(getSprintItem());
 
-            sprintAbility = new SprintAbility();
-            abilityManager.registerAbility(Role.Chigiri, Collections.singletonList(sprintAbility));
+                    sprintAbility = new SprintAbility();
+                    abilityManager.registerAbility(Role.Chigiri, Collections.singletonList(sprintAbility));
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ItemStack item = player.getItemInHand();
-                    if (item.equals(getSprintItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, sprintAbility) + "§b) §9«");
-                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            ItemStack item = player.getItemInHand();
+                            if (item.equals(getSprintItem())) {
+                                Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, sprintAbility) / 1000 + "§b) §9«");
+                            }
+                        }
+                    }.runTaskTimer(Blb.getInstance(), 0, 5);
                 }
-            }.runTaskTimer(Blb.getInstance(), 0, 5);
+            }
         }
     }
 
@@ -99,7 +103,7 @@ public class ChigiriListener implements Listener {
                 player.sendMessage("§3│ §fVous venez d'utiliser §bSprint§f.");
             }
             else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, sprintAbility) / 1000 + " §fsur cette capacité.");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, sprintAbility) / 1000 + "s §fsur cette capacité.");
             }
         }
     }

@@ -19,6 +19,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -141,10 +142,33 @@ public class BallManager implements Listener {
         }.runTaskTimer(Blb.getInstance(), 0, 5);
     }
 
+    @EventHandler
+    private void OnMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        Location location = player.getLocation();
+        if (ball != null && isSameLocation(location, ball.getLocation())) {
+            launchBall(player, 2);
+        }
+    }
+
+    private boolean isSameLocation(Location loc1, Location loc2) {
+        return loc1.getWorld().equals(loc2.getWorld()) &&
+                Math.round(loc1.getX()) == Math.round(loc2.getX()) &&
+                Math.round(loc1.getY()) == Math.round(loc2.getY()) &&
+                Math.round(loc1.getZ()) == Math.round(loc2.getZ());
+    }
+
     private void addGoal(TeamEnum team) {
         goalMap.put(team, goalMap.getOrDefault(team, 0) + 1);
         for (Player player : Blb.getInstance().getPlayerManager().getPlayers()) {
-            TitleAPI.sendTitle(player,10,3*20,10,"§6§l» §e§lBut §7: §l§9 " + getGoal(TeamEnum.BLEU) + " §7-§l§c " + getGoal(TeamEnum.ROUGE) + " §6§l«","§fPoint pour l'équipe §l " + team.name());
+            String subtitle;
+            if (team.equals(TeamEnum.BLEU)) {
+                subtitle = "§fPoint pour l'équipe §l§9Bleu";
+            }
+            else {
+                subtitle = "§fPoint pour l'équipe §l§cRouge";
+            }
+            TitleAPI.sendTitle(player,5,3*20,5,"§6§l» §e§lBut §7: §l§9 " + getGoal(TeamEnum.BLEU) + " §7-§l§c " + getGoal(TeamEnum.ROUGE) + " §6§l«", subtitle);
         }
         if (goalMap.getOrDefault(TeamEnum.BLEU, 0) >= 5) {
             Blb.getInstance().getGameManager().finishGame(TeamEnum.BLEU);

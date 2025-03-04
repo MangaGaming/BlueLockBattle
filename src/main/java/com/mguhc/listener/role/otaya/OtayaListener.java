@@ -47,42 +47,46 @@ public class OtayaListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Otoya);
-        if (player != null) {
-            player.sendMessage("§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f \n" +
-                    "§8│ §3§lINFORMATIONS\n" +
-                    "§f §b▪ §fPersonnage §7: §9§lBaro\n" +
-                    "§f §b▪ §fVie §7: §c10§4❤\n" +
-                    "§f §b▪ §fEffets §7: §bVitesse I\n" +
-                    "§f \n" +
-                    "§8│ §3§lPARTICULARITES\n" +
-                    "§f §b▪ §fVous ...\n" +
-                    "§f §b▪ §fVous mettez §e8 §fsecondes à réapparaitre.\n" +
-                    "§f \n" +
-                    "§8│ §3§lPOUVOIRS\n" +
-                    "§f §b▪ §fFantôme §8(§b«§8)\n" +
-                    "§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»");
-            player.setMaxHealth(20);
-            player.getInventory().addItem(getFantomeItem());
+        List<Player> players = roleManager.getPlayersWithRole(Role.Otoya);
+        if (players != null) {
+            for (Player player : players) {
+                if (player != null) {
+                    player.sendMessage("§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                            "§f \n" +
+                            "§8│ §3§lINFORMATIONS\n" +
+                            "§f §b▪ §fPersonnage §7: §9§lBaro\n" +
+                            "§f §b▪ §fVie §7: §c10§4❤\n" +
+                            "§f §b▪ §fEffets §7: §bVitesse I\n" +
+                            "§f \n" +
+                            "§8│ §3§lPARTICULARITES\n" +
+                            "§f §b▪ §fVous ...\n" +
+                            "§f §b▪ §fVous mettez §e8 §fsecondes à réapparaitre.\n" +
+                            "§f \n" +
+                            "§8│ §3§lPOUVOIRS\n" +
+                            "§f §b▪ §fFantôme §8(§b«§8)\n" +
+                            "§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»");
+                    player.setMaxHealth(20);
+                    player.getInventory().addItem(getFantomeItem());
 
-            fantomeAbility = new FantomeAbility();
-            abilityManager.registerAbility(Role.Otoya, Collections.singletonList(fantomeAbility));
+                    fantomeAbility = new FantomeAbility();
+                    abilityManager.registerAbility(Role.Otoya, Collections.singletonList(fantomeAbility));
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ItemStack item = player.getItemInHand();
-                    if (item.equals(getFantomeItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, fantomeAbility) + "§b) §9« " + "§3| " + "§9» §f§lNinja §b(§f5%§b) §9«");
-                    }
-                    else {
-                        Blb.sendActionBar(player, "§9» §f§lNinja §b(§f5%§b) §9«");
-                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            ItemStack item = player.getItemInHand();
+                            if (item.equals(getFantomeItem())) {
+                                Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, fantomeAbility) / 1000 + "§b) §9« " + "§3| " + "§9» §f§lNinja §b(§f5%§b) §9«");
+                            }
+                            else {
+                                Blb.sendActionBar(player, "§9» §f§lNinja §b(§f5%§b) §9«");
+                            }
+                        }
+                    }.runTaskTimer(Blb.getInstance(), 0, 5);
                 }
-            }.runTaskTimer(Blb.getInstance(), 0, 5);
+            }
         }
     }
 
@@ -121,7 +125,7 @@ public class OtayaListener implements Listener {
                 player.sendMessage("§3│ §fVous venez d'utiliser §bFantôme§f.");
             }
             else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, fantomeAbility) / 1000 + " §fsur cette capacité.");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, fantomeAbility) / 1000 + "s §fsur cette capacité.");
             }
         }
     }

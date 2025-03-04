@@ -58,6 +58,7 @@ public class Blb extends JavaPlugin implements Listener {
     private Team bleu;
     private final List<Team> teams = new ArrayList<>();
     private ProtocolManager protocolManager;
+    private PermissionManager permissionManager;
 
     public void onEnable() {
         instance = this;
@@ -65,6 +66,7 @@ public class Blb extends JavaPlugin implements Listener {
         teamManager = new TeamManager();
         playerManager = new PlayerManager();
         effectManager = new EffectManager();
+        permissionManager = new PermissionManager();
         ballManager = new BallManager();
         abilityManager = new AbilityManager();
         cooldownManager = new CooldownManager();
@@ -229,4 +231,7 @@ public class Blb extends JavaPlugin implements Listener {
         return instance;
     }
 
+    public PermissionManager getPermissionManager() {
+        return permissionManager;
+    }
 }

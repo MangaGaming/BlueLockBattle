@@ -48,43 +48,47 @@ public class KarasuListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Karasu);
-        if (player != null) {
-            player.sendMessage("§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f \n" +
-                    "§8│ §3§lINFORMATIONS\n" +
-                    "§f §b▪ §fPersonnage §7: §9§lKarasu\n" +
-                    "§f §b▪ §fVie §7: §c12§4❤\n" +
-                    "§f §b▪ §fEffets §7: §7Résistance I\n" +
-                    "§f \n" +
-                    "§8│ §3§lPARTICULARITES\n" +
-                    "§f §b▪ §f...\n" +
-                    "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
-                    "§f \n" +
-                    "§8│ §3§lPOUVOIRS\n" +
-                    "§f §b▪ §fEsquive §8(§b«§8)\n" +
-                    "§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»");
-            player.setMaxHealth(24);
-            player.getInventory().addItem(getEsquiveItem());
-            effectManager.setResistance(player, 20);
+        List<Player> players = roleManager.getPlayersWithRole(Role.Karasu);
+        if (players != null) {
+            for (Player player : players) {
+                if (player != null) {
+                    player.sendMessage("§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                            "§f \n" +
+                            "§8│ §3§lINFORMATIONS\n" +
+                            "§f §b▪ §fPersonnage §7: §9§lKarasu\n" +
+                            "§f §b▪ §fVie §7: §c12§4❤\n" +
+                            "§f §b▪ §fEffets §7: §7Résistance I\n" +
+                            "§f \n" +
+                            "§8│ §3§lPARTICULARITES\n" +
+                            "§f §b▪ §f...\n" +
+                            "§f §b▪ §fVous mettez §e12 §fsecondes à réapparaitre.\n" +
+                            "§f \n" +
+                            "§8│ §3§lPOUVOIRS\n" +
+                            "§f §b▪ §fEsquive §8(§b«§8)\n" +
+                            "§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»");
+                    player.setMaxHealth(24);
+                    player.getInventory().addItem(getEsquiveItem());
+                    effectManager.setResistance(player, 20);
 
-            esquiveAbility = new EsquiveAbility();
-            abilityManager.registerAbility(Role.Karasu, Collections.singletonList(esquiveAbility));
+                    esquiveAbility = new EsquiveAbility();
+                    abilityManager.registerAbility(Role.Karasu, Collections.singletonList(esquiveAbility));
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ItemStack item = player.getItemInHand();
-                    if (item.equals(getEsquiveItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, esquiveAbility) + "§b) §9« " + "§3| " + "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
-                    }
-                    else {
-                        Blb.sendActionBar(player, "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
-                    }
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            ItemStack item = player.getItemInHand();
+                            if (item.equals(getEsquiveItem())) {
+                                Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, esquiveAbility) / 1000 + "§b) §9« " + "§3| " + "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
+                            }
+                            else {
+                                Blb.sendActionBar(player, "§9» §f§lMilieu de Terrain §b(§f5%§b) §9«");
+                            }
+                        }
+                    }.runTaskTimer(Blb.getInstance(), 0, 5);
                 }
-            }.runTaskTimer(Blb.getInstance(), 0, 5);
+            }
         }
     }
 
@@ -123,7 +127,7 @@ public class KarasuListener implements Listener {
                 player.sendMessage("§3│ §fVous venez d'utiliser §bEsquive§f.");
             }
             else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, esquiveAbility) / 1000 + " §fsur cette capacité.");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, esquiveAbility) / 1000 + "s §fsur cette capacité.");
             }
         }
     }

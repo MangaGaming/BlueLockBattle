@@ -22,17 +22,14 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class RoleGuiListener implements Listener {
 
     private final RoleManager roleManager;
     private final PlayerManager playerManager;
     private boolean isChoosing;
-    Map<Player, Role> chosenRole = new HashMap<>();
+    Map<Player, Role> chosenRole = new HashMap<>(); // Changer pour stocker un seul rôle par joueur
 
     public RoleGuiListener() {
         this.roleManager = Blb.getInstance().getRoleManager();
@@ -54,17 +51,8 @@ public class RoleGuiListener implements Listener {
                 isChoosing = false;
                 for (Map.Entry<Player, Role> entry : chosenRole.entrySet()) {
                     Player player = entry.getKey();
-                    try {
-                        // Vérifiez si l'inventaire est ouvert et a la bonne taille
-                        if (player.getOpenInventory().getTopInventory().getSize() > 49) {
-                            ItemStack itemAt49 = player.getOpenInventory().getItem(49);
-                            if (itemAt49 != null && itemAt49.equals(getReadyItem())) {
-                                roleManager.setRole(player, entry.getValue());
-                            }
-                        }
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        Bukkit.getLogger().warning(e.getMessage());
-                    }
+                    Role role = entry.getValue();
+                    roleManager.setRole(player, role); // Attribuer le rôle au joueur
                 }
                 for (Player player : playerManager.getPlayers()) {
                     player.closeInventory();
@@ -108,7 +96,7 @@ public class RoleGuiListener implements Listener {
         roleInventory.setItem(3, glassAquaItem);
         roleInventory.setItem(5, glassAquaItem);
 
-        roleInventory.setItem(4, getSoccerBall());
+        roleInventory.setItem( 4, getSoccerBall());
 
         roleInventory.setItem(49, getUnreadyItem());
 
@@ -142,30 +130,13 @@ public class RoleGuiListener implements Listener {
                 String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
                 Role selectedRole = Role.valueOf(roleName); // Convertir le nom en énumération Role
 
-                // Vérifier si le rôle est déjà pris
-                TeamManager teamManager = Blb.getInstance().getTeamManager();
-                if (!chosenRole.containsValue(selectedRole)) {
-                    // Si aucun joueur n'a ce rôle, attribuer le rôle au joueur
-                    chosenRole.remove(player);
-                    chosenRole.put(player, selectedRole);
+                // Vérifier si le joueur a déjà un rôle
+                if (!chosenRole.containsKey(player)) {
+                    // Attribuer le rôle au joueur
+                    chosenRole.put(player, selectedRole); // Mettre à jour la carte
                     player.sendMessage(ChatColor.GREEN + "Vous avez choisi le rôle : " + roleName + " !");
                 } else {
-                    // Vérifier si le joueur avec le rôle appartient à la même équipe
-                    Player playerWithRole = null;
-                    for (Map.Entry<Player, Role> entry : chosenRole.entrySet()) {
-                        if (entry.getValue() == selectedRole) {
-                            playerWithRole = entry.getKey();
-                        }
-                    }
-                    if (playerWithRole != null && teamManager.getTeam(playerWithRole).equals(teamManager.getTeam(player))) {
-                        player.sendMessage(ChatColor.RED + "Ce rôle est déjà pris par un autre joueur de ton équipe !");
-                    } else {
-                        // Si le joueur avec le rôle est dans une autre équipe, vous pouvez attribuer le rôle
-                        chosenRole.remove(player);
-                        chosenRole.put(player, selectedRole);
-                        player.sendMessage(ChatColor.GREEN + "Vous avez choisi le rôle : " + roleName + " !");
-                        player.closeInventory();
-                    }
+                    player.sendMessage(ChatColor.RED + "Vous avez déjà un rôle !");
                 }
             }
         }
@@ -181,8 +152,7 @@ public class RoleGuiListener implements Listener {
                 player.sendMessage("§cVous n'êtes maintenant plus prêt");
                 inventory.remove(clickedItem);
                 inventory.setItem(49, getUnreadyItem());
-            }
-            else if (clickedItem.equals(getUnreadyItem())) {
+            } else if (clickedItem.equals(getUnreadyItem())) {
                 player.sendMessage("§aVous êtes maintenant prêt");
                 inventory.remove(clickedItem);
                 inventory.setItem(49, getReadyItem());
@@ -209,12 +179,12 @@ public class RoleGuiListener implements Listener {
     }
 
     private ItemStack getSoccerBall() throws NoSuchFieldException, IllegalAccessException {
-        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte) SkullType.PLAYER.ordinal());
         SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
         itemMeta.setDisplayName("§9§lBlueLock Battle");
 
         GameProfile profile = new GameProfile(UUID.randomUUID(), null);
-        profile.getProperties().put("textures", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGI3NDc5ZjRkMjE4YmIzMjU2ZTI2Y2Q0ZGZhMDhjY2E1MGFmNTc4MmNjMmJiYmRmMDY3YzIxN2Q4MzQyZDNkNyJ9fX0="));
+        profile.getProperties().put("textures", new Property("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGI3NDc5ZjRkMjE4YmIzMjU2ZTI2Y2Q0ZGZhMDhjY2E1MGFmNTc4MmNjMmJiYmRmMDY3YzIxN2Q4MzQyZDN kNyJ9fX0="));
         Field field;
         field = itemMeta.getClass().getDeclaredField("profile");
         field.setAccessible(true);
@@ -225,7 +195,7 @@ public class RoleGuiListener implements Listener {
     }
 
     private ItemStack getReadyItem() throws NoSuchFieldException, IllegalAccessException {
-        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte) SkullType.PLAYER.ordinal());
         SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
         itemMeta.setDisplayName("§a§lPrêt");
 
@@ -241,7 +211,7 @@ public class RoleGuiListener implements Listener {
     }
 
     private ItemStack getUnreadyItem() throws NoSuchFieldException, IllegalAccessException {
-        ItemStack item = new ItemStack(Material.SKULL_ITEM,1,(byte) SkullType.PLAYER.ordinal());
+        ItemStack item = new ItemStack(Material.SKULL_ITEM, 1, (byte) SkullType.PLAYER.ordinal());
         SkullMeta itemMeta = (SkullMeta) item.getItemMeta();
         itemMeta.setDisplayName("§c§lPas Prêt");
 

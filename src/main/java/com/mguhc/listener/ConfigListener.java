@@ -4,10 +4,6 @@ import com.mguhc.Blb;
 import com.mguhc.manager.*;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -37,7 +33,7 @@ public class ConfigListener implements Listener {
     private final TeamManager teamManager;
     private final GameManager gameManager;
     private final PlayerManager playerManager; // Ajout de PlayerManager
-    private final LuckPerms luckPerms;
+    private final PermissionManager permissionManager;
 
     public ConfigListener() {
         Blb blb = Blb.getInstance();
@@ -45,7 +41,7 @@ public class ConfigListener implements Listener {
         teamManager = blb.getTeamManager();
         gameManager = blb.getGameManager();
         playerManager = blb.getPlayerManager();
-        luckPerms = LuckPermsProvider.get();
+        permissionManager = blb.getPermissionManager();
     }
 
     @EventHandler
@@ -59,7 +55,7 @@ public class ConfigListener implements Listener {
             player.setSaturation(20f);
             player.teleport(new Location(Bukkit.getWorld("world"), 282, 7, 1243));
             Blb.clearAll(player);
-            if (player.hasPermission("blb.host")) {
+            if (permissionManager.hasPermission(player, "blb.host") || player.isOp()) {
                 player.getInventory().setItem(4, getConfigItem());
             }
             player.getInventory().addItem(getTeamItem());
@@ -247,7 +243,7 @@ public class ConfigListener implements Listener {
                 meta.setDisplayName(onlinePlayer.getName()); // Nom du joueur
                 List<String> lore = new ArrayList<>();
                 // Vérifier si le joueur a déjà la permission
-                if (onlinePlayer.hasPermission("blb.host")) {
+                if (permissionManager.hasPermission(player, "blb.host")) {
                     lore.add(ChatColor.RED + "Déjà Host");
                 } else {
                     lore.add(ChatColor.GREEN + "Cliquez pour donner le statut de Host");
@@ -276,7 +272,7 @@ public class ConfigListener implements Listener {
                 meta.setDisplayName(onlinePlayer.getName()); // Nom du joueur
                 List<String> lore = new ArrayList<>();
                 // Vérifier si le joueur a déjà la permission
-                if (onlinePlayer.hasPermission("blb.host")) {
+                if (permissionManager.hasPermission(player, "blb.mod")) {
                     lore.add(ChatColor.RED + "Déjà Mod");
                 } else {
                     lore.add(ChatColor.GREEN + "Cliquez pour donner le statut de Mod");
@@ -306,30 +302,17 @@ public class ConfigListener implements Listener {
                 Player selectedPlayer = Bukkit.getPlayer(playerName);
 
                 if (selectedPlayer != null) {
-                    User user = luckPerms.getUserManager().getUser (selectedPlayer.getUniqueId());
-                    if (selectedPlayer.hasPermission("blb.host")) {
-                        // Retirer la permission api.mod
-                        assert user != null;
-                        user.data().remove(Node.builder("blb.host").build());
-                        luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
-
+                    if (permissionManager.hasPermission(selectedPlayer, "blb.host")) {
+                        permissionManager.removePermission(selectedPlayer, "blb.host");
                         player.sendMessage(ChatColor.RED + selectedPlayer.getName() + " n'est plus Host.");
                         selectedPlayer.sendMessage(ChatColor.RED + "Vous avez été retiré du statut de Host.");
 
                     } else {
-                        if (user != null) {
-                            // Ajouter la permission api.host
-                            user.data().add(Node.builder("blb.host").build());
-                            luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
-
-                            player.sendMessage(ChatColor.GREEN + selectedPlayer.getName() + " a maintenant le statut de Host.");
-                            selectedPlayer.sendMessage(ChatColor.GREEN + "Vous avez été promu au statut de Host.");
-
-                            selectedPlayer.getInventory().addItem(getConfigItem()); // Donner l'étoile du Nether au joueur
-                            selectedPlayer.updateInventory();
-                        } else {
-                            player.sendMessage(ChatColor.RED + "Erreur : Impossible de récupérer les données de permission pour " + selectedPlayer.getName());
-                        }
+                        permissionManager.addPermission(selectedPlayer, "blb.host");
+                        player.sendMessage(ChatColor.GREEN + selectedPlayer.getName() + " a maintenant le statut de Host.");
+                        selectedPlayer.sendMessage(ChatColor.GREEN + "Vous avez été promu au statut de Host.");
+                        selectedPlayer.getInventory().addItem(getConfigItem()); // Donner l'étoile du Nether au joueur
+                        selectedPlayer.updateInventory();
                     }
                 }
             }
@@ -350,28 +333,20 @@ public class ConfigListener implements Listener {
                 Player selectedPlayer = Bukkit.getPlayer(playerName);
 
                 if (selectedPlayer != null) {
-                    User user = luckPerms.getUserManager().getUser (selectedPlayer.getUniqueId());
-                    if (selectedPlayer.hasPermission("blb.mod")) {
+                    if (permissionManager.hasPermission(selectedPlayer, "blb.mod")) {
                         // Retirer la permission blb.mod
-                        assert user != null;
-                        user.data().remove(Node.builder("blb.mod").build());
-                        luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
+                        permissionManager.removePermission(selectedPlayer, "blb.mod");
 
                         player.sendMessage(ChatColor.RED + selectedPlayer.getName() + " n'est plus Mod.");
                         selectedPlayer.sendMessage(ChatColor.RED + "Vous avez été retiré du statut de Mod.");
                         playerManager.addPlayer(selectedPlayer);
                     } else {
-                        if (user != null) {
-                            // Ajouter la permission blb.mod
-                            user.data().add(Node.builder("blb.mod").build());
-                            luckPerms.getUserManager().saveUser (user); // Sauvegarder l'utilisateur
+                        // Ajouter la permission blb.mod
+                        permissionManager.addPermission(player, "blb.mod");
 
-                            player.sendMessage(ChatColor.GREEN + selectedPlayer.getName() + " a maintenant le statut de Mod.");
-                            selectedPlayer.sendMessage(ChatColor.GREEN + "Vous avez été promu au statut de Mod.");
-                            playerManager.removePlayer(selectedPlayer);
-                        } else {
-                            player.sendMessage(ChatColor.RED + "Erreur : Impossible de récupérer les données de permission pour " + selectedPlayer.getName());
-                        }
+                        player.sendMessage(ChatColor.GREEN + selectedPlayer.getName() + " a maintenant le statut de Mod.");
+                        selectedPlayer.sendMessage(ChatColor.GREEN + "Vous avez été promu au statut de Mod.");
+                        playerManager.removePlayer(selectedPlayer);
                     }
                 }
             }

@@ -46,44 +46,52 @@ public class ReoListener implements Listener {
 
     @EventHandler
     private void OnRoleGive(RoleGiveEvent event) {
-        Player player = roleManager.getPlayerWithRole(Role.Reo);
-        if (player != null) {
-            player.sendMessage("§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»\n" +
-                    "§f \n" +
-                    "§8│ §3§lINFORMATIONS\n" +
-                    "§f §b▪ §fPersonnage §7: §9§lReo\n" +
-                    "§f §b▪ §fVie §7: §c10§4❤\n" +
-                    "§f §b▪ §fEffets §7: §bVitesse I\n" +
-                    "§f \n" +
-                    "§8│ §3§lPARTICULARITES\n" +
-                    "§f §b▪ §fVous ...\n" +
-                    "§f §b▪ §fVous mettez §e8 §fsecondes à réapparaitre.\n" +
-                    "§f \n" +
-                    "§8│ §3§lPOUVOIRS\n" +
-                    "§f §b▪ §fTéléportation §8(§b«§8)\n" +
-                    "§f \n" +
-                    "§8§l«§8§m---------------------------------------------------§8§l»");
-            player.setMaxHealth(20);
-            player.getInventory().addItem(getTeleportationItem());
+        List<Player> players = roleManager.getPlayersWithRole(Role.Reo);
+        if (players != null) {
+            for (Player player : players) {
+                if (player != null) {
+                    player.sendMessage("§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»\n" +
+                            "§f \n" +
+                            "§8│ §3§lINFORMATIONS\n" +
+                            "§f §b▪ §fPersonnage §7: §9§lReo\n" +
+                            "§f §b▪ §fVie §7: §c10§4❤\n" +
+                            "§f §b▪ §fEffets §7: §bVitesse I\n" +
+                            "§f \n" +
+                            "§8│ §3§lPARTICULARITES\n" +
+                            "§f §b▪ §fVous ...\n" +
+                            "§f §b▪ §fVous mettez §e8 §fsecondes à réapparaitre.\n" +
+                            "§f \n" +
+                            "§8│ §3§lPOUVOIRS\n" +
+                            "§f §b▪ §fTéléportation §8(§b«§8)\n" +
+                            "§f \n" +
+                            "§8§l«§8§m---------------------------------------------------§8§l»");
+                    player.setMaxHealth(20);
+                    player.getInventory().addItem(getTeleportationItem());
 
-            teleportationAbility = new TeleportationAbility();
-            abilityManager.registerAbility(Role.Reo, Collections.singletonList(teleportationAbility));
-            
-            Player p = roleManager.getPlayerWithRole(Role.Nagi);
-            if (p != null && teamManager.getTeam(p) == teamManager.getTeam(player)) {
-                nagi = p;
-            }
+                    teleportationAbility = new TeleportationAbility();
+                    abilityManager.registerAbility(Role.Reo, Collections.singletonList(teleportationAbility));
 
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    ItemStack item = player.getItemInHand();
-                    if (item.equals(getTeleportationItem())) {
-                        Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + cooldownManager.getRemainingCooldown(player, teleportationAbility) + "§b) §9«");
+                    List<Player> nagis = roleManager.getPlayersWithRole(Role.Nagi);
+                    if (nagis != null) {
+                        for (Player p : nagis) {
+                            if (teamManager.getTeam(p) == teamManager.getTeam(player)) {
+                                nagi = p;
+                            }
+                        }
                     }
+
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            ItemStack item = player.getItemInHand();
+                            if (item.equals(getTeleportationItem())) {
+                                Blb.sendActionBar(player, "§9» §f§lCooldown §b(§f" + (long) cooldownManager.getRemainingCooldown(player, teleportationAbility) / 1000 + "§b) §9«");
+                            }
+                        }
+                    }.runTaskTimer(Blb.getInstance(), 0, 5);
                 }
-            }.runTaskTimer(Blb.getInstance(), 0, 5);
+            }
         }
     }
 
@@ -130,7 +138,7 @@ public class ReoListener implements Listener {
                 }
             }
             else {
-                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, teleportationAbility) / 1000 + " §fsur cette capacité.");
+                player.sendMessage("§6┃ §fVous avez un §6cooldown §fde §e" + (long) cooldownManager.getRemainingCooldown(player, teleportationAbility) / 1000 + "s §fsur cette capacité.");
             }
         }
     }
