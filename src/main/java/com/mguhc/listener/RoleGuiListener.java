@@ -80,21 +80,21 @@ public class RoleGuiListener implements Listener {
             glassAquaItem.setItemMeta(itemMeta);
         }
 
-        roleInventory.setItem(0, getGlassItem());
-        roleInventory.setItem(1, getGlassItem());
-        roleInventory.setItem(9, getGlassItem());
-        roleInventory.setItem(36, getGlassItem());
-        roleInventory.setItem(45, getGlassItem());
-        roleInventory.setItem(46, getGlassItem());
-        roleInventory.setItem(7, getGlassItem());
-        roleInventory.setItem(8, getGlassItem());
-        roleInventory.setItem(17, getGlassItem());
-        roleInventory.setItem(52, getGlassItem());
-        roleInventory.setItem(53, getGlassItem());
-        roleInventory.setItem(44, getGlassItem());
+            roleInventory.setItem(0, getGlassItem());
+            roleInventory.setItem(1, getGlassItem());
+            roleInventory.setItem(9, getGlassItem());
+            roleInventory.setItem(36, getGlassItem());
+            roleInventory.setItem(45, getGlassItem());
+            roleInventory.setItem(46, getGlassItem());
+            roleInventory.setItem(7, getGlassItem());
+            roleInventory.setItem(8, getGlassItem());
+            roleInventory.setItem(17, getGlassItem());
+            roleInventory.setItem(52, getGlassItem());
+            roleInventory.setItem(53, getGlassItem());
+            roleInventory.setItem(44, getGlassItem());
 
-        roleInventory.setItem(3, glassAquaItem);
-        roleInventory.setItem(5, glassAquaItem);
+            roleInventory.setItem(3, glassAquaItem);
+            roleInventory.setItem(5, glassAquaItem);
 
         roleInventory.setItem( 4, getSoccerBall());
 

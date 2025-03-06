@@ -32,7 +32,7 @@ public class ConfigListener implements Listener {
     private final RoleManager roleManager;
     private final TeamManager teamManager;
     private final GameManager gameManager;
-    private final PlayerManager playerManager; // Ajout de PlayerManager
+    private final PlayerManager playerManager;
     private final PermissionManager permissionManager;
 
     public ConfigListener() {
@@ -243,7 +243,7 @@ public class ConfigListener implements Listener {
                 meta.setDisplayName(onlinePlayer.getName()); // Nom du joueur
                 List<String> lore = new ArrayList<>();
                 // Vérifier si le joueur a déjà la permission
-                if (permissionManager.hasPermission(player, "blb.host")) {
+                if (permissionManager.hasPermission(onlinePlayer, "blb.host")) {
                     lore.add(ChatColor.RED + "Déjà Host");
                 } else {
                     lore.add(ChatColor.GREEN + "Cliquez pour donner le statut de Host");
@@ -272,7 +272,7 @@ public class ConfigListener implements Listener {
                 meta.setDisplayName(onlinePlayer.getName()); // Nom du joueur
                 List<String> lore = new ArrayList<>();
                 // Vérifier si le joueur a déjà la permission
-                if (permissionManager.hasPermission(player, "blb.mod")) {
+                if (permissionManager.hasPermission(onlinePlayer, "blb.mod")) {
                     lore.add(ChatColor.RED + "Déjà Mod");
                 } else {
                     lore.add(ChatColor.GREEN + "Cliquez pour donner le statut de Mod");
