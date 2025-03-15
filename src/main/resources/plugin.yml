@@ -2,7 +2,6 @@ name: BlueLockBattle
 version: 1.0
 main: com.mguhc.Blb
 api-version: 1.8
-
 commands:
   tag:
     description: Une commande pour changer le name tag du joueur
